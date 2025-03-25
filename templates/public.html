@@ -2,7 +2,6 @@
 {% block content %}
 <div class="public-page">
   <h2>{{ department | upper }} Notices - Slideshow</h2>
-  
   <div class="slideshow-container">
     <div class="slideshow">
       {% for notice in notices %}
@@ -11,12 +10,13 @@
           {% if notice[1] in ['png', 'jpg', 'jpeg', 'gif'] %}
             <img src="{{ file_url }}" alt="Notice Image">
           {% elif notice[1] == 'mp4' %}
-            <!-- Video now only shows controls; no autoplay or muted attributes -->
-            <video src="{{ file_url }}" controls></video>
+            <!-- Video automatically plays without controls -->
+            <video src="{{ file_url }}" autoplay muted playsinline></video>
           {% elif notice[1] == 'mp3' %}
-            <audio src="{{ file_url }}" controls></audio>
+            <!-- Audio can play automatically if desired -->
+            <audio src="{{ file_url }}" autoplay controls></audio>
           {% else %}
-            <!-- Documents now require a click; using download attribute -->
+            <!-- For documents, require a click -->
             <a href="{{ file_url }}" target="_blank" download>View Document</a>
           {% endif %}
         </div>
@@ -27,19 +27,43 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  let timer = 5000; // 5 seconds per slide
-  let slides = document.querySelectorAll('.slideshow .slide');
+  const slides = document.querySelectorAll('.slideshow .slide');
   let currentSlide = 0;
   
+  // Hide all slides except the first one
   slides.forEach((slide, index) => {
     if (index !== 0) slide.style.display = 'none';
   });
   
-  setInterval(() => {
+  function showNextSlide() {
     slides[currentSlide].style.display = 'none';
     currentSlide = (currentSlide + 1) % slides.length;
-    slides[currentSlide].style.display = 'block';
-  }, timer);
+    const nextSlide = slides[currentSlide];
+    nextSlide.style.display = 'block';
+    
+    // If the next slide has a video, wait for it to end; otherwise use timer
+    const video = nextSlide.querySelector('video');
+    if (video) {
+      video.addEventListener('ended', function handler() {
+        video.removeEventListener('ended', handler);
+        showNextSlide();
+      });
+    } else {
+      setTimeout(showNextSlide, 5000); // Display non-video slides for 5 seconds
+    }
+  }
+  
+  // Start the slideshow based on the first slide type
+  const firstSlide = slides[0];
+  const firstVideo = firstSlide.querySelector('video');
+  if (firstVideo) {
+    firstVideo.addEventListener('ended', function handler() {
+      firstVideo.removeEventListener('ended', handler);
+      showNextSlide();
+    });
+  } else {
+    setTimeout(showNextSlide, 5000);
+  }
 });
 </script>
 {% endblock %}
