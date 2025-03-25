@@ -12,14 +12,14 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mp3', 'pdf', 'docx'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Get PostgreSQL database URL from Render environment variable
+# Get PostgreSQL database URL from environment variables (set on Render)
 DATABASE_URL = os.getenv('DATABASE_URL')
 
-# Database connection function
+# Function to get a database connection
 def get_db_connection():
     return psycopg2.connect(DATABASE_URL)
 
-# Initialize PostgreSQL database
+# Initialize PostgreSQL database with necessary tables
 def init_db():
     conn = get_db_connection()
     c = conn.cursor()
@@ -37,9 +37,9 @@ def init_db():
     conn.commit()
     conn.close()
 
-init_db()  # Run database initialization on startup
+init_db()  # Initialize database on startup
 
-# Helper function: Check if file extension is allowed
+# Helper: Check if the file extension is allowed
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -97,7 +97,7 @@ def logout():
     flash('Logged out successfully.')
     return redirect(url_for('index'))
 
-# Dashboard route (requires login)
+# Dashboard (requires login)
 @app.route('/dashboard')
 def dashboard():
     if 'username' in session:
@@ -120,7 +120,7 @@ def department(dept):
             return redirect(url_for('department', dept=dept))
     return render_template('department.html', department=dept)
 
-# Admin panel route: upload and manage notices
+# Admin panel for uploading and managing notices
 @app.route('/admin/<dept>', methods=['GET', 'POST'])
 def admin(dept):
     if 'dept' in session and session['dept'] == dept:
@@ -153,7 +153,7 @@ def admin(dept):
         flash('Unauthorized access. Please enter department admin password.')
         return redirect(url_for('department', dept=dept))
 
-# Delete notice route
+# Delete a notice
 @app.route('/delete_notice/<int:notice_id>')
 def delete_notice(notice_id):
     if 'dept' in session:
@@ -181,20 +181,36 @@ def delete_notice(notice_id):
         flash('Unauthorized access.')
         return redirect(url_for('login'))
 
-# Route to serve uploaded files
+# Serve uploaded files
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-# Slideshow route
+# Public route to view notices department-wise
+@app.route('/<dept>')
+def public_dept(dept):
+    dept = dept.lower()
+    if dept in ['extc', 'it', 'mech', 'cs']:
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT filename, filetype FROM notices WHERE department=%s", (dept,))
+        notices = c.fetchall()
+        conn.close()
+        return render_template('public.html', department=dept, notices=notices, timer=5)
+    else:
+        flash('Department not found.')
+        return redirect(url_for('index'))
+
+# Slideshow route (optional separate view)
 @app.route('/slideshow/<dept>')
 def slideshow(dept):
+    dept = dept.lower()
     conn = get_db_connection()
     c = conn.cursor()
     c.execute("SELECT filename, filetype FROM notices WHERE department=%s", (dept,))
     notices = c.fetchall()
     conn.close()
-    return render_template('slideshow.html', department=dept, notices=notices)
+    return render_template('slideshow.html', department=dept, notices=notices, timer=5)
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
