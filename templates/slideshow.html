@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="slideshow-container">
+  <h2>{{ department | upper }} Slideshow</h2>
+  <form method="POST" action="{{ url_for('slideshow', dept=department) }}">
+    <label for="timer">Set slideshow timer (seconds):</label>
+    <input type="number" id="timer" name="timer" min="1" value="{{ timer }}" required>
+    <input type="submit" value="Set Timer" class="btn">
+  </form>
+  <div class="slideshow">
+    {% for notice in notices %}
+      {% set file_url = url_for('uploaded_file', filename=notice[0]) %}
+      {% if notice[1] in ['png', 'jpg', 'jpeg', 'gif'] %}
+        <img src="{{ file_url }}" alt="Notice Image">
+      {% elif notice[1] == 'mp4' %}
+        <video src="{{ file_url }}" controls></video>
+      {% elif notice[1] == 'mp3' %}
+        <audio src="{{ file_url }}" controls></audio>
+      {% else %}
+        <a href="{{ file_url }}" target="_blank">View Document</a>
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>
+<script>
+  // Basic slideshow functionality using the timer value (in seconds)
+  document.addEventListener('DOMContentLoaded', () => {
+    let timer = {{ timer }} * 1000;
+    let slides = document.querySelectorAll('.slideshow > *');
+    let currentSlide = 0;
+    if(slides.length > 0) {
+      slides.forEach((slide, index) => {
+        if(index !== 0) slide.style.display = 'none';
+      });
+      setInterval(() => {
+        slides[currentSlide].style.display = 'none';
+        currentSlide = (currentSlide + 1) % slides.length;
+        slides[currentSlide].style.display = 'block';
+      }, timer);
+    }
+  });
+</script>
+{% endblock %}
