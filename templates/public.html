@@ -10,13 +10,11 @@
           {% if notice[1] in ['png', 'jpg', 'jpeg', 'gif'] %}
             <img src="{{ file_url }}" alt="Notice Image">
           {% elif notice[1] == 'mp4' %}
-            <!-- Video automatically plays without controls -->
-            <video src="{{ file_url }}" autoplay muted playsinline></video>
+            <!-- Video element with autoplay attributes -->
+            <video src="{{ file_url }}" muted playsinline></video>
           {% elif notice[1] == 'mp3' %}
-            <!-- Audio can play automatically if desired -->
             <audio src="{{ file_url }}" autoplay controls></audio>
           {% else %}
-            <!-- For documents, require a click -->
             <a href="{{ file_url }}" target="_blank" download>View Document</a>
           {% endif %}
         </div>
@@ -35,32 +33,58 @@ document.addEventListener('DOMContentLoaded', () => {
     if (index !== 0) slide.style.display = 'none';
   });
   
-  function showNextSlide() {
-    slides[currentSlide].style.display = 'none';
-    currentSlide = (currentSlide + 1) % slides.length;
-    const nextSlide = slides[currentSlide];
-    nextSlide.style.display = 'block';
-    
-    // If the next slide has a video, wait for it to end; otherwise use timer
-    const video = nextSlide.querySelector('video');
+  // Function to handle video slide: reset, load, play and attach ended listener
+  function playVideo(slide, callback) {
+    const video = slide.querySelector('video');
     if (video) {
-      video.addEventListener('ended', function handler() {
-        video.removeEventListener('ended', handler);
-        showNextSlide();
+      video.pause();
+      video.currentTime = 0;
+      video.load(); // Reload the video source to reset the video
+      video.play().then(() => {
+        video.addEventListener('ended', function handler() {
+          video.removeEventListener('ended', handler);
+          callback();
+        });
+      }).catch((err) => {
+        console.error("Video play error:", err);
+        // Fallback: after 5 seconds, go to next slide
+        setTimeout(callback, 5000);
       });
     } else {
-      setTimeout(showNextSlide, 5000); // Display non-video slides for 5 seconds
+      callback();
     }
   }
   
-  // Start the slideshow based on the first slide type
+  function showNextSlide() {
+    const current = slides[currentSlide];
+    // If current slide is a video, pause and reset it
+    const currentVideo = current.querySelector('video');
+    if (currentVideo) {
+      currentVideo.pause();
+      currentVideo.currentTime = 0;
+    }
+    current.style.display = 'none';
+    
+    // Calculate next slide index
+    currentSlide = (currentSlide + 1) % slides.length;
+    const next = slides[currentSlide];
+    next.style.display = 'block';
+    
+    const nextVideo = next.querySelector('video');
+    if (nextVideo) {
+      // Use our helper function to reset and auto-play the video
+      playVideo(next, showNextSlide);
+    } else {
+      // For non-video slides, use a fixed display time (e.g., 5 seconds)
+      setTimeout(showNextSlide, 5000);
+    }
+  }
+  
+  // Start slideshow: check if first slide is a video
   const firstSlide = slides[0];
   const firstVideo = firstSlide.querySelector('video');
   if (firstVideo) {
-    firstVideo.addEventListener('ended', function handler() {
-      firstVideo.removeEventListener('ended', handler);
-      showNextSlide();
-    });
+    playVideo(firstSlide, showNextSlide);
   } else {
     setTimeout(showNextSlide, 5000);
   }
