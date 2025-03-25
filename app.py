@@ -12,7 +12,7 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mp3', 'pdf', 'docx'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Get PostgreSQL database URL from environment variables (set on Render)
+# Get PostgreSQL database URL from environment variables (on Render)
 DATABASE_URL = os.getenv('DATABASE_URL')
 
 # Function to get a database connection
@@ -39,7 +39,7 @@ def init_db():
 
 init_db()  # Initialize database on startup
 
-# Helper: Check if the file extension is allowed
+# Helper: Check if file extension is allowed
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -48,7 +48,7 @@ def allowed_file(filename):
 def index():
     return render_template('index.html')
 
-# Signup route
+# Signup route (sets a 'signed_up' cookie upon success)
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
@@ -59,9 +59,9 @@ def signup():
         try:
             c.execute("INSERT INTO users (username, password) VALUES (%s, %s)", (username, password))
             conn.commit()
-            # Create a response that sets a cookie to remember the signup
+            # Set cookie to remember signup
             resp = make_response(redirect(url_for('login')))
-            resp.set_cookie('signed_up', 'true', max_age=30*24*60*60)  # Cookie valid for 30 days
+            resp.set_cookie('signed_up', 'true', max_age=30*24*60*60)  # 30 days
             flash('Signup successful. Please login.')
             return resp
         except psycopg2.IntegrityError:
@@ -71,7 +71,7 @@ def signup():
         finally:
             conn.close()
     else:
-        # On GET, if the user already signed up (cookie exists), redirect to login
+        # If user already signed up (cookie), redirect to login
         if request.cookies.get('signed_up'):
             flash('You have already signed up. Please login.')
             return redirect(url_for('login'))
