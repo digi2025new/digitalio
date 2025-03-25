@@ -13,24 +13,25 @@
       {% if notice[1] in ['png', 'jpg', 'jpeg', 'gif'] %}
         <img src="{{ file_url }}" alt="Notice Image">
       {% elif notice[1] == 'mp4' %}
+        <!-- Video displays with controls only -->
         <video src="{{ file_url }}" controls></video>
       {% elif notice[1] == 'mp3' %}
         <audio src="{{ file_url }}" controls></audio>
       {% else %}
-        <a href="{{ file_url }}" target="_blank">View Document</a>
+        <!-- For non-media files, provide a clickable link -->
+        <a href="{{ file_url }}" target="_blank" download>View Document</a>
       {% endif %}
     {% endfor %}
   </div>
 </div>
 <script>
-  // Basic slideshow functionality using the timer value (in seconds)
   document.addEventListener('DOMContentLoaded', () => {
     let timer = {{ timer }} * 1000;
     let slides = document.querySelectorAll('.slideshow > *');
     let currentSlide = 0;
-    if(slides.length > 0) {
+    if (slides.length > 0) {
       slides.forEach((slide, index) => {
-        if(index !== 0) slide.style.display = 'none';
+        if (index !== 0) slide.style.display = 'none';
       });
       setInterval(() => {
         slides[currentSlide].style.display = 'none';

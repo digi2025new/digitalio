@@ -3,7 +3,6 @@
 <div class="public-page">
   <h2>{{ department | upper }} Notices - Slideshow</h2>
   
-  <!-- Centered Slideshow Container -->
   <div class="slideshow-container">
     <div class="slideshow">
       {% for notice in notices %}
@@ -12,11 +11,13 @@
           {% if notice[1] in ['png', 'jpg', 'jpeg', 'gif'] %}
             <img src="{{ file_url }}" alt="Notice Image">
           {% elif notice[1] == 'mp4' %}
-            <video src="{{ file_url }}" controls muted></video>
+            <!-- Video now only shows controls; no autoplay or muted attributes -->
+            <video src="{{ file_url }}" controls></video>
           {% elif notice[1] == 'mp3' %}
             <audio src="{{ file_url }}" controls></audio>
           {% else %}
-            <a href="{{ file_url }}" target="_blank">View Document</a>
+            <!-- Documents now require a click; using download attribute -->
+            <a href="{{ file_url }}" target="_blank" download>View Document</a>
           {% endif %}
         </div>
       {% endfor %}
@@ -26,19 +27,14 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  // Fixed timer of 5 seconds (5000 milliseconds)
-  let timer = 5000;
+  let timer = 5000; // 5 seconds per slide
   let slides = document.querySelectorAll('.slideshow .slide');
   let currentSlide = 0;
   
-  // Hide all slides except the first one
   slides.forEach((slide, index) => {
-    if (index !== 0) {
-      slide.style.display = 'none';
-    }
+    if (index !== 0) slide.style.display = 'none';
   });
   
-  // Cycle through slides every 5 seconds
   setInterval(() => {
     slides[currentSlide].style.display = 'none';
     currentSlide = (currentSlide + 1) % slides.length;
