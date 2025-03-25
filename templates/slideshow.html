@@ -34,15 +34,24 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   function showNextSlide() {
-    slides[currentSlide].style.display = 'none';
-    currentSlide = (currentSlide + 1) % slides.length;
-    const nextSlide = slides[currentSlide];
-    nextSlide.style.display = 'block';
+    const current = slides[currentSlide];
+    const currentVideo = current.querySelector('video');
+    if (currentVideo) {
+      currentVideo.pause();
+      currentVideo.currentTime = 0;
+    }
+    current.style.display = 'none';
     
-    const video = nextSlide.querySelector('video');
-    if (video) {
-      video.addEventListener('ended', function handler() {
-        video.removeEventListener('ended', handler);
+    currentSlide = (currentSlide + 1) % slides.length;
+    const next = slides[currentSlide];
+    next.style.display = 'block';
+    
+    const nextVideo = next.querySelector('video');
+    if (nextVideo) {
+      nextVideo.currentTime = 0;
+      nextVideo.play();
+      nextVideo.addEventListener('ended', function handler() {
+        nextVideo.removeEventListener('ended', handler);
         showNextSlide();
       });
     } else {
@@ -53,6 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const firstSlide = slides[0];
   const firstVideo = firstSlide.querySelector('video');
   if (firstVideo) {
+    firstVideo.currentTime = 0;
+    firstVideo.play();
     firstVideo.addEventListener('ended', function handler() {
       firstVideo.removeEventListener('ended', handler);
       showNextSlide();

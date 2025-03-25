@@ -2,13 +2,14 @@ import os
 import psycopg2
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory, make_response
 from werkzeug.utils import secure_filename
+from pdf2image import convert_from_path  # New import for PDF conversion
 
 app = Flask(__name__)
 app.secret_key = 'your_secure_key'  # Change this to a strong, unique key
 
 # Configuration for file uploads
 UPLOAD_FOLDER = 'uploads/'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mp3', 'pdf', 'docx'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mp3', 'pdf', 'docx', 'xlsx'}  # Add more if needed
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -142,15 +143,41 @@ def admin(dept):
                 return redirect(request.url)
             if file and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                file_extension = filename.rsplit('.', 1)[1].lower()
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(file_path)
                 conn = get_db_connection()
                 c = conn.cursor()
-                c.execute("INSERT INTO notices (department, filename, filetype) VALUES (%s, %s, %s)",
-                          (dept, filename, filename.rsplit('.', 1)[1].lower()))
-                conn.commit()
-                conn.close()
-                flash('File uploaded successfully.')
-                return redirect(url_for('admin', dept=dept))
+                # If PDF, convert to images
+                if file_extension == 'pdf':
+                    try:
+                        pages = convert_from_path(file_path, dpi=200)
+                        base_filename = filename.rsplit('.', 1)[0]
+                        # For each page, save as image and insert into the database
+                        for i, page in enumerate(pages, start=1):
+                            image_filename = f"{base_filename}_page_{i}.jpg"
+                            image_path = os.path.join(app.config['UPLOAD_FOLDER'], image_filename)
+                            page.save(image_path, 'JPEG')
+                            c.execute("INSERT INTO notices (department, filename, filetype) VALUES (%s, %s, %s)",
+                                      (dept, image_filename, 'pdf_image'))
+                        conn.commit()
+                        flash('PDF converted and images uploaded successfully.')
+                    except Exception as e:
+                        conn.rollback()
+                        flash('Error converting PDF: ' + str(e))
+                    finally:
+                        conn.close()
+                    # Optionally, remove the original PDF
+                    os.remove(file_path)
+                    return redirect(url_for('admin', dept=dept))
+                else:
+                    # For other file types, just insert normally
+                    c.execute("INSERT INTO notices (department, filename, filetype) VALUES (%s, %s, %s)",
+                              (dept, filename, file_extension))
+                    conn.commit()
+                    conn.close()
+                    flash('File uploaded successfully.')
+                    return redirect(url_for('admin', dept=dept))
         conn = get_db_connection()
         c = conn.cursor()
         c.execute("SELECT * FROM notices WHERE department=%s", (dept,))
@@ -201,7 +228,7 @@ def public_dept(dept):
     if dept in ['extc', 'it', 'mech', 'cs']:
         conn = get_db_connection()
         c = conn.cursor()
-        c.execute("SELECT filename, filetype FROM notices WHERE department=%s", (dept,))
+        c.execute("SELECT * FROM notices WHERE department=%s", (dept,))
         notices = c.fetchall()
         conn.close()
         return render_template('public.html', department=dept, notices=notices, timer=5)
@@ -215,7 +242,7 @@ def slideshow(dept):
     dept = dept.lower()
     conn = get_db_connection()
     c = conn.cursor()
-    c.execute("SELECT filename, filetype FROM notices WHERE department=%s", (dept,))
+    c.execute("SELECT * FROM notices WHERE department=%s", (dept,))
     notices = c.fetchall()
     conn.close()
     return render_template('slideshow.html', department=dept, notices=notices, timer=5)
