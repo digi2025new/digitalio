@@ -1,6 +1,6 @@
 import os
 import psycopg2
-from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory, make_response
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
@@ -59,15 +59,23 @@ def signup():
         try:
             c.execute("INSERT INTO users (username, password) VALUES (%s, %s)", (username, password))
             conn.commit()
+            # Create a response that sets a cookie to remember the signup
+            resp = make_response(redirect(url_for('login')))
+            resp.set_cookie('signed_up', 'true', max_age=30*24*60*60)  # Cookie valid for 30 days
             flash('Signup successful. Please login.')
-            return redirect(url_for('login'))
+            return resp
         except psycopg2.IntegrityError:
             conn.rollback()
-            flash('Username already exists. Try a different one.')
+            flash('User already exists. Please login.')
+            return redirect(url_for('login'))
         finally:
             conn.close()
-        return redirect(url_for('signup'))
-    return render_template('signup.html')
+    else:
+        # On GET, if the user already signed up (cookie exists), redirect to login
+        if request.cookies.get('signed_up'):
+            flash('You have already signed up. Please login.')
+            return redirect(url_for('login'))
+        return render_template('signup.html')
 
 # Login route
 @app.route('/login', methods=['GET', 'POST'])
