@@ -23,15 +23,15 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   let slides = document.querySelectorAll('.slideshow .slide');
+  if (slides.length === 0) return;
   let currentIndex = 0;
-  if (slides.length > 0) {
+  slides[currentIndex].style.display = 'block';
+
+  setInterval(function() {
+    slides[currentIndex].style.display = 'none';
+    currentIndex = (currentIndex + 1) % slides.length;
     slides[currentIndex].style.display = 'block';
-    setInterval(function() {
-      slides[currentIndex].style.display = 'none';
-      currentIndex = (currentIndex + 1) % slides.length;
-      slides[currentIndex].style.display = 'block';
-    }, 10000); // 10 seconds per slide
-  }
+  }, 5000);
 });
 </script>
 {% endblock %}
