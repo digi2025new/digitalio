@@ -7,45 +7,38 @@
       <div class="slide" style="display: none;">
         {% set file_url = url_for('uploaded_file', filename=notice[2]) %}
         {% if notice[3] in ['png', 'jpg', 'jpeg', 'gif', 'pdf_image'] %}
-          <img src="{{ file_url }}" alt="Notice Image">
+          <img src="{{ file_url }}" alt="Notice Image" class="responsive-media">
         {% elif notice[3] == 'mp4' %}
-          <video src="{{ file_url }}" autoplay muted playsinline></video>
+          <video src="{{ file_url }}" autoplay muted playsinline class="responsive-media"></video>
         {% elif notice[3] == 'mp3' %}
-          <audio src="{{ file_url }}" autoplay controls></audio>
+          <audio src="{{ file_url }}" autoplay controls class="responsive-media"></audio>
         {% else %}
           <a href="{{ file_url }}" target="_blank" download>View Document</a>
         {% endif %}
       </div>
     {% endfor %}
   </div>
-  <button id="restartSlideshow" class="btn btn-secondary" style="margin-top: 20px;">Restart Slideshow</button>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const slides = document.querySelectorAll('.slideshow .slide');
   let currentIndex = 0;
-  let timeoutHandle;
+  let slideTimeout;
 
   function showSlide(index) {
-    clearTimeout(timeoutHandle);
-    // Hide all slides
+    // Hide all slides first
     slides.forEach(slide => slide.style.display = 'none');
-    let currentSlide = slides[index];
-    currentSlide.style.display = 'block';
+    slides[index].style.display = 'block';
 
-    // Check if the slide contains a video element
-    let video = currentSlide.querySelector('video');
+    // If slide contains a video, wait until video ends before moving on.
+    const video = slides[index].querySelector('video');
     if (video) {
-      // Restart the video playback
       video.currentTime = 0;
-      // When the video ends, move to the next slide
-      video.onended = function() {
-        nextSlide();
-      };
+      video.onended = nextSlide;
     } else {
-      // For non-video slides, wait 5 seconds then go to next slide
-      timeoutHandle = setTimeout(nextSlide, 5000);
+      // Otherwise, wait 5 seconds then show next slide.
+      slideTimeout = setTimeout(nextSlide, 5000);
     }
   }
 
@@ -54,16 +47,9 @@ document.addEventListener('DOMContentLoaded', function() {
     showSlide(currentIndex);
   }
 
-  function startSlideshow() {
-    currentIndex = 0;
+  if (slides.length > 0) {
     showSlide(currentIndex);
   }
-
-  startSlideshow();
-
-  document.getElementById('restartSlideshow').addEventListener('click', function() {
-    startSlideshow();
-  });
 });
 </script>
 {% endblock %}
