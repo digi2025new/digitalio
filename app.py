@@ -280,6 +280,7 @@ def delete_notice(notice_id):
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
+# Public display route: show all notices for a department (they remain until deleted)
 @app.route('/<dept>')
 def public_dept(dept):
     dept = dept.lower()
@@ -288,7 +289,7 @@ def public_dept(dept):
         c = conn.cursor()
         c.execute("""
             SELECT * FROM notices
-            WHERE department=%s AND (scheduled_time IS NULL OR scheduled_time <= NOW())
+            WHERE department=%s
             ORDER BY id DESC
         """, (dept,))
         notices = c.fetchall()
@@ -307,7 +308,7 @@ def get_latest_notices(dept):
         c.execute("""
             SELECT id, department, filename, filetype, scheduled_time
             FROM notices
-            WHERE department=%s AND (scheduled_time IS NULL OR scheduled_time <= NOW())
+            WHERE department=%s
             ORDER BY id DESC
         """, (dept,))
         notices = c.fetchall()
