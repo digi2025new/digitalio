@@ -320,3 +320,37 @@ header {
     width: 100%;
   }
 }
+
+/* ---------------------------------------
+10. PUBLIC DISPLAY & SLIDESHOW NOTICES
+---------------------------------------- */
+/* Container to hold notice elements on public pages */
+#notices-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  padding: 20px;
+}
+
+/* Individual notice styling for public pages */
+.notice {
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
+  max-width: 300px;
+  width: 100%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.notice img,
+.notice video,
+.notice audio {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  display: block;
+  margin: 0 auto;
+}
