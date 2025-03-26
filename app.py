@@ -125,7 +125,6 @@ def department(dept):
             return redirect(url_for('department', dept=dept))
     return render_template('department.html', department=dept)
 
-# Admin panel now shows two sections: Immediate and Prescheduled
 @app.route('/admin/<dept>', methods=['GET', 'POST'])
 def admin(dept):
     if 'dept' in session and session['dept'] == dept:
@@ -174,7 +173,7 @@ def admin(dept):
                         return redirect(url_for('admin', dept=dept))
             conn = get_db_connection()
             c = conn.cursor()
-            # Immediate notices: those with scheduled_time NULL or <= NOW()
+            # Immediate notices: those with scheduled_time NULL or ≤ NOW()
             c.execute("""
                 SELECT * FROM notices 
                 WHERE department=%s AND (scheduled_time IS NULL OR scheduled_time <= NOW())
@@ -197,7 +196,6 @@ def admin(dept):
         flash('Unauthorized access. Please enter department admin password.')
         return redirect(url_for('department', dept=dept))
 
-# For scheduling notices (unchanged)
 @app.route('/schedule_notice/<dept>', methods=['GET', 'POST'])
 def schedule_notice(dept):
     if 'dept' in session and session['dept'] == dept:
@@ -294,7 +292,7 @@ def delete_notice(notice_id):
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-# Public display route: only immediate notices are shown (prescheduled ones are hidden)
+# Public display route: show all uploaded notices continuously in a loop
 @app.route('/<dept>')
 def public_dept(dept):
     dept = dept.lower()
@@ -303,7 +301,7 @@ def public_dept(dept):
         c = conn.cursor()
         c.execute("""
             SELECT * FROM notices
-            WHERE department=%s AND (scheduled_time IS NULL OR scheduled_time <= NOW())
+            WHERE department=%s
             ORDER BY id DESC
         """, (dept,))
         notices = c.fetchall()
@@ -322,7 +320,7 @@ def get_latest_notices(dept):
         c.execute("""
             SELECT id, department, filename, filetype, scheduled_time
             FROM notices
-            WHERE department=%s AND (scheduled_time IS NULL OR scheduled_time <= NOW())
+            WHERE department=%s
             ORDER BY id DESC
         """, (dept,))
         notices = c.fetchall()
