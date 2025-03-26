@@ -9,14 +9,14 @@
 
 body {
   font-family: Arial, sans-serif;
-  background-color: #fff; /* changed from #f4f4f4 to #fff */
+  background-color: #fff;
   margin: 0;
   padding: 0;
 }
 
 /* Container for general page content */
 .container {
-  width: 100%; /* changed from 80% to 100% */
+  width: 100%;
   margin: 0 auto;
   padding: 0;
 }
@@ -77,7 +77,10 @@ header {
 .hero::after {
   content: "";
   position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: rgba(0, 0, 0, 0.5);
 }
 
@@ -287,6 +290,7 @@ header {
   background: #fff;
 }
 
+/* Full-screen slideshow: each slide fits viewport */
 .slideshow {
   position: relative;
   width: 100%;
