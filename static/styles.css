@@ -77,10 +77,7 @@ header {
 .hero::after {
   content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0, 0, 0, 0.5);
 }
 
@@ -292,7 +289,8 @@ header {
 
 .slideshow {
   position: relative;
-  width: 80%;
+  width: 100%;
+  max-width: 800px;
   margin: 0 auto;
   overflow: hidden;
 }
@@ -306,7 +304,7 @@ header {
 .slide img,
 .slide video,
 .slide audio {
-  max-width: 100%;
+  width: 100%;
   height: auto;
   display: block;
   margin: 0 auto;

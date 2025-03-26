@@ -280,7 +280,6 @@ def delete_notice(notice_id):
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-# Public display route uses the slideshow template
 @app.route('/<dept>')
 def public_dept(dept):
     dept = dept.lower()
