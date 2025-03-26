@@ -280,7 +280,7 @@ def delete_notice(notice_id):
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-# Updated public display route: renders slideshow template (real-time update handled via polling in slideshow.html)
+# Public display route uses the slideshow template
 @app.route('/<dept>')
 def public_dept(dept):
     dept = dept.lower()

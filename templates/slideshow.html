@@ -25,11 +25,13 @@ document.addEventListener('DOMContentLoaded', function() {
   let slideInterval;
   let slides = document.querySelectorAll('.slideshow .slide');
   let currentIndex = 0;
+  let currentContent = document.getElementById('slideshow').innerHTML;
 
   function showSlide(index) {
+    clearTimeout(slideInterval);
     slides.forEach(slide => slide.style.display = 'none');
     slides[index].style.display = 'block';
-    const video = slides[index].querySelector('video');
+    let video = slides[index].querySelector('video');
     if (video) {
       video.currentTime = 0;
       video.onended = nextSlide;
@@ -48,36 +50,35 @@ document.addEventListener('DOMContentLoaded', function() {
     showSlide(currentIndex);
   }
 
-  // Function to update slideshow content in real time
   function updateSlideshow() {
     fetch("{{ url_for('get_latest_notices', dept=department) }}")
       .then(response => response.json())
       .then(data => {
-        const slideshowDiv = document.getElementById('slideshow');
-        let html = "";
+        let newHTML = "";
         data.forEach(notice => {
           const fileUrl = "{{ url_for('uploaded_file', filename='') }}" + notice.filename;
           if (['png', 'jpg', 'jpeg', 'gif', 'pdf_image'].includes(notice.filetype)) {
-            html += `<div class="slide" style="display: none;"><img src="${fileUrl}" alt="Notice Image" class="responsive-media"></div>`;
+            newHTML += `<div class="slide" style="display: none;"><img src="${fileUrl}" alt="Notice Image" class="responsive-media"></div>`;
           } else if (notice.filetype === 'mp4') {
-            html += `<div class="slide" style="display: none;"><video src="${fileUrl}" autoplay muted playsinline class="responsive-media"></video></div>`;
+            newHTML += `<div class="slide" style="display: none;"><video src="${fileUrl}" autoplay muted playsinline class="responsive-media"></video></div>`;
           } else if (notice.filetype === 'mp3') {
-            html += `<div class="slide" style="display: none;"><audio src="${fileUrl}" autoplay controls class="responsive-media"></audio></div>`;
+            newHTML += `<div class="slide" style="display: none;"><audio src="${fileUrl}" autoplay controls class="responsive-media"></audio></div>`;
           } else {
-            html += `<div class="slide" style="display: none;"><a href="${fileUrl}" target="_blank" download>View Document</a></div>`;
+            newHTML += `<div class="slide" style="display: none;"><a href="${fileUrl}" target="_blank" download>View Document</a></div>`;
           }
         });
-        slideshowDiv.innerHTML = html;
-        clearTimeout(slideInterval);
-        slides = document.querySelectorAll('.slideshow .slide');
-        startSlideshow();
+        if(newHTML !== currentContent) {
+          currentContent = newHTML;
+          clearTimeout(slideInterval);
+          document.getElementById('slideshow').innerHTML = newHTML;
+          slides = document.querySelectorAll('.slideshow .slide');
+          startSlideshow();
+        }
       })
       .catch(error => console.error("Error updating slideshow:", error));
   }
 
-  // Initialize slideshow on page load
   startSlideshow();
-  // Poll for updates every 5 seconds
   setInterval(updateSlideshow, 5000);
 });
 </script>

@@ -17,7 +17,7 @@ body {
 /* Container for general page content */
 .container {
   width: 100%; /* changed from 80% to 100% */
-  margin: 0 auto;
+  margin: 0 auto; 
   padding: 0;
 }
 
