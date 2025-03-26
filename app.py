@@ -184,6 +184,7 @@ def admin(dept):
         flash('Unauthorized access. Please enter department admin password.')
         return redirect(url_for('department', dept=dept))
 
+# For scheduled notices – same as before
 @app.route('/schedule_notice/<dept>', methods=['GET', 'POST'])
 def schedule_notice(dept):
     if 'dept' in session and session['dept'] == dept:
@@ -280,6 +281,7 @@ def delete_notice(notice_id):
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
+# Updated public display route to use slideshow format
 @app.route('/<dept>')
 def public_dept(dept):
     dept = dept.lower()
@@ -293,24 +295,11 @@ def public_dept(dept):
         """, (dept,))
         notices = c.fetchall()
         conn.close()
-        return render_template('public.html', department=dept, notices=notices, timer=5)
+        # Render the slideshow template for public display
+        return render_template('slideshow.html', department=dept, notices=notices)
     else:
         flash('Department not found.')
         return redirect(url_for('index'))
-
-@app.route('/slideshow/<dept>')
-def slideshow(dept):
-    dept = dept.lower()
-    conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("""
-        SELECT * FROM notices
-        WHERE department=%s AND (scheduled_time IS NULL OR scheduled_time <= NOW())
-        ORDER BY id DESC
-    """, (dept,))
-    notices = c.fetchall()
-    conn.close()
-    return render_template('slideshow.html', department=dept, notices=notices)
 
 @app.route('/get_latest_notices/<dept>')
 def get_latest_notices(dept):

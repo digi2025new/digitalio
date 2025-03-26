@@ -35,10 +35,7 @@ document.addEventListener('DOMContentLoaded', function() {
       slides[currentIndex].style.display = 'block';
       interval = setInterval(function() {
         slides[currentIndex].style.display = 'none';
-        currentIndex++;
-        if (currentIndex >= slides.length) {
-          currentIndex = 0;  // Reset index to loop continuously
-        }
+        currentIndex = (currentIndex + 1) % slides.length; // Loop continuously
         slides[currentIndex].style.display = 'block';
       }, 5000);
     }
