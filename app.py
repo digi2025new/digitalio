@@ -3,10 +3,11 @@ import psycopg2
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory, make_response
 from werkzeug.utils import secure_filename
 from pdf2image import convert_from_path  # For PDF conversion
-from datetime import datetime  # New import for scheduling
+from datetime import datetime  # For scheduled notices
 
 app = Flask(__name__)
-app.secret_key = 'your_secure_key'  # Change this to a strong, unique key
+# Retrieve the secret key from an environment variable if available, or use a fallback.
+app.secret_key = os.getenv('SECRET_KEY', 'your_fallback_secret_key')
 
 # Configuration for file uploads
 UPLOAD_FOLDER = 'uploads/'
@@ -14,11 +15,11 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mp3', 'pdf', 'docx', 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Get PostgreSQL database URL from environment variables (on Render)
-DATABASE_URL = os.getenv('DATABASE_URL')
-
-# Function to get a database connection
+# Use the DATABASE_URL environment variable that you have set in Render
 def get_db_connection():
+    DATABASE_URL = os.getenv('DATABASE_URL')
+    if not DATABASE_URL:
+        raise Exception("DATABASE_URL environment variable not set!")
     return psycopg2.connect(DATABASE_URL)
 
 # Initialize PostgreSQL database with necessary tables (including scheduled_time)
@@ -62,7 +63,6 @@ def signup():
         try:
             c.execute("INSERT INTO users (username, password) VALUES (%s, %s)", (username, password))
             conn.commit()
-            # Set cookie to remember signup
             resp = make_response(redirect(url_for('login')))
             resp.set_cookie('signed_up', 'true', max_age=30*24*60*60)  # 30 days
             flash('Signup successful. Please login.')
@@ -74,7 +74,6 @@ def signup():
         finally:
             conn.close()
     else:
-        # If user already signed up (cookie), redirect to login
         if request.cookies.get('signed_up'):
             flash('You have already signed up. Please login.')
             return redirect(url_for('login'))
@@ -137,7 +136,6 @@ def admin(dept):
     if 'dept' in session and session['dept'] == dept:
         if request.method == 'POST' and 'file' in request.files:
             file = request.files['file']
-            # Immediate upload handler remains unchanged
             if file.filename == '':
                 flash('No selected file.')
                 return redirect(request.url)
@@ -148,7 +146,6 @@ def admin(dept):
                 file.save(file_path)
                 conn = get_db_connection()
                 c = conn.cursor()
-                # If PDF, convert to images
                 if file_extension == 'pdf':
                     try:
                         pages = convert_from_path(file_path, dpi=200)
@@ -177,7 +174,6 @@ def admin(dept):
                     return redirect(url_for('admin', dept=dept))
         conn = get_db_connection()
         c = conn.cursor()
-        # Select all notices for the department (both immediate and scheduled that are active)
         c.execute("SELECT * FROM notices WHERE department=%s ORDER BY id DESC", (dept,))
         notices = c.fetchall()
         conn.close()
@@ -201,7 +197,6 @@ def schedule_notice(dept):
                 return redirect(request.url)
             if file and allowed_file(file.filename):
                 try:
-                    # Parse the scheduled datetime (expects format from datetime-local input)
                     scheduled_time = datetime.strptime(scheduled_time_str, '%Y-%m-%dT%H:%M')
                 except ValueError:
                     flash('Invalid date/time format.')
@@ -212,7 +207,6 @@ def schedule_notice(dept):
                 file.save(file_path)
                 conn = get_db_connection()
                 c = conn.cursor()
-                # Handle PDF conversion if needed
                 if file_extension == 'pdf':
                     try:
                         pages = convert_from_path(file_path, dpi=200)
@@ -277,14 +271,13 @@ def delete_notice(notice_id):
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-# Public route to view notices department-wise (only active notices)
+# Public route to view active notices (immediate or scheduled that have passed)
 @app.route('/<dept>')
 def public_dept(dept):
     dept = dept.lower()
     if dept in ['extc', 'it', 'mech', 'cs']:
         conn = get_db_connection()
         c = conn.cursor()
-        # Select notices with no scheduled time or where scheduled_time <= now
         c.execute("SELECT * FROM notices WHERE department=%s AND (scheduled_time IS NULL OR scheduled_time <= NOW())", (dept,))
         notices = c.fetchall()
         conn.close()
