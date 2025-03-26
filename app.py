@@ -51,7 +51,6 @@ def allowed_file(filename):
 def index():
     return render_template('index.html')
 
-# Signup, login, logout, dashboard, department routes remain unchanged…
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
@@ -294,6 +293,7 @@ def public_dept(dept):
         """, (dept,))
         notices = c.fetchall()
         conn.close()
+        # Render slideshow template on public URL
         return render_template('slideshow.html', department=dept, notices=notices)
     else:
         flash('Department not found.')
