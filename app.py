@@ -3,26 +3,26 @@ import psycopg2
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory, make_response
 from werkzeug.utils import secure_filename
 from pdf2image import convert_from_path  # For PDF conversion
-from datetime import datetime  # For scheduled notices
+from datetime import datetime, timezone, timedelta  # For scheduled notices and timezone conversion
 
 app = Flask(__name__)
-# Retrieve the secret key from an environment variable if available, or use a fallback.
+# Set secret key from environment variable or fallback
 app.secret_key = os.getenv('SECRET_KEY', 'your_fallback_secret_key')
 
 # Configuration for file uploads
 UPLOAD_FOLDER = 'uploads/'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mp3', 'pdf', 'docx', 'xlsx'}  # Add more if needed
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mp3', 'pdf', 'docx', 'xlsx'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Use the DATABASE_URL environment variable that you have set in Render
+# Function to get a database connection using DATABASE_URL from environment
 def get_db_connection():
     DATABASE_URL = os.getenv('DATABASE_URL')
     if not DATABASE_URL:
         raise Exception("DATABASE_URL environment variable not set!")
     return psycopg2.connect(DATABASE_URL)
 
-# Initialize PostgreSQL database with necessary tables (including scheduled_time)
+# Initialize the PostgreSQL database with necessary tables (including scheduled_time)
 def init_db():
     conn = get_db_connection()
     c = conn.cursor()
@@ -43,16 +43,16 @@ def init_db():
 
 init_db()  # Initialize database on startup
 
-# Helper: Check if file extension is allowed
+# Helper function to check allowed file extensions
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# Home page
+# Home page route
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# Signup route (sets a 'signed_up' cookie upon success)
+# Signup route
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
@@ -107,7 +107,7 @@ def logout():
     flash('Logged out successfully.')
     return redirect(url_for('index'))
 
-# Dashboard (requires login)
+# Dashboard route (requires login)
 @app.route('/dashboard')
 def dashboard():
     if 'username' in session:
@@ -182,7 +182,7 @@ def admin(dept):
         flash('Unauthorized access. Please enter department admin password.')
         return redirect(url_for('department', dept=dept))
 
-# New Route: Scheduling a Notice
+# New route: Scheduling a Notice (with separate date, time, and AM/PM inputs)
 @app.route('/schedule_notice/<dept>', methods=['GET', 'POST'])
 def schedule_notice(dept):
     if 'dept' in session and session['dept'] == dept:
@@ -191,15 +191,26 @@ def schedule_notice(dept):
                 flash('No file part.')
                 return redirect(request.url)
             file = request.files['file']
-            scheduled_time_str = request.form.get('scheduled_time')
-            if file.filename == '' or not scheduled_time_str:
+            # Retrieve separate date, time, and AM/PM fields from the form
+            date_str = request.form.get('date')   # Expected format: YYYY-MM-DD
+            time_str = request.form.get('time')   # Expected as hh:mm in 12-hour format
+            ampm = request.form.get('ampm')        # "AM" or "PM"
+            if file.filename == '' or not (date_str and time_str and ampm):
                 flash('Please select a file and scheduled date/time.')
                 return redirect(request.url)
             if file and allowed_file(file.filename):
                 try:
-                    scheduled_time = datetime.strptime(scheduled_time_str, '%Y-%m-%dT%H:%M')
+                    # Combine into a single string, e.g., "2025-03-27 02:30 PM"
+                    scheduled_time_str = f"{date_str} {time_str} {ampm}"
+                    # Parse using 12-hour format (%I for hour in 12-hour clock)
+                    naive_dt = datetime.strptime(scheduled_time_str, "%Y-%m-%d %I:%M %p")
+                    # Attach IST timezone (GMT +5:30)
+                    ist = timezone(timedelta(hours=5, minutes=30))
+                    ist_dt = naive_dt.replace(tzinfo=ist)
+                    # Convert IST to UTC for storage
+                    utc_dt = ist_dt.astimezone(timezone.utc)
                 except ValueError:
-                    flash('Invalid date/time format.')
+                    flash('Invalid date/time format. Please use the correct format (e.g., 02:30 PM).')
                     return redirect(request.url)
                 filename = secure_filename(file.filename)
                 file_extension = filename.rsplit('.', 1)[1].lower()
@@ -216,7 +227,7 @@ def schedule_notice(dept):
                             image_path = os.path.join(app.config['UPLOAD_FOLDER'], image_filename)
                             page.save(image_path, 'JPEG')
                             c.execute("INSERT INTO notices (department, filename, filetype, scheduled_time) VALUES (%s, %s, %s, %s)",
-                                      (dept, image_filename, 'pdf_image', scheduled_time))
+                                      (dept, image_filename, 'pdf_image', utc_dt))
                         conn.commit()
                         flash('PDF converted and images scheduled successfully.')
                     except Exception as e:
@@ -228,7 +239,7 @@ def schedule_notice(dept):
                     return redirect(url_for('admin', dept=dept))
                 else:
                     c.execute("INSERT INTO notices (department, filename, filetype, scheduled_time) VALUES (%s, %s, %s, %s)",
-                              (dept, filename, file_extension, scheduled_time))
+                              (dept, filename, file_extension, utc_dt))
                     conn.commit()
                     conn.close()
                     flash('Notice scheduled successfully.')
@@ -271,7 +282,7 @@ def delete_notice(notice_id):
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-# Public route to view active notices (immediate or scheduled that have passed)
+# Public route: View active notices (immediate or scheduled that have passed)
 @app.route('/<dept>')
 def public_dept(dept):
     dept = dept.lower()
@@ -286,7 +297,7 @@ def public_dept(dept):
         flash('Department not found.')
         return redirect(url_for('index'))
 
-# Slideshow route (shows only active notices)
+# Slideshow route: Shows only active notices
 @app.route('/slideshow/<dept>')
 def slideshow(dept):
     dept = dept.lower()
