@@ -51,8 +51,10 @@ def allowed_file(filename):
 def index():
     return render_template('index.html')
 
+# (Signup, login, logout, dashboard, and department routes remain unchanged)
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
+    # ... (your existing signup code)
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
@@ -79,6 +81,7 @@ def signup():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    # ... (your existing login code)
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
