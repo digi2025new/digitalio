@@ -125,6 +125,7 @@ def department(dept):
             return redirect(url_for('department', dept=dept))
     return render_template('department.html', department=dept)
 
+# Admin panel now shows two sections: Immediate and Prescheduled
 @app.route('/admin/<dept>', methods=['GET', 'POST'])
 def admin(dept):
     if 'dept' in session and session['dept'] == dept:
@@ -173,10 +174,22 @@ def admin(dept):
                         return redirect(url_for('admin', dept=dept))
             conn = get_db_connection()
             c = conn.cursor()
-            c.execute("SELECT * FROM notices WHERE department=%s ORDER BY id DESC", (dept,))
-            notices = c.fetchall()
+            # Immediate notices: those with scheduled_time NULL or <= NOW()
+            c.execute("""
+                SELECT * FROM notices 
+                WHERE department=%s AND (scheduled_time IS NULL OR scheduled_time <= NOW())
+                ORDER BY id DESC
+            """, (dept,))
+            immediate_notices = c.fetchall()
+            # Prescheduled notices: those with scheduled_time > NOW()
+            c.execute("""
+                SELECT * FROM notices 
+                WHERE department=%s AND scheduled_time > NOW()
+                ORDER BY id DESC
+            """, (dept,))
+            prescheduled_notices = c.fetchall()
             conn.close()
-            return render_template('admin.html', department=dept, notices=notices)
+            return render_template('admin.html', department=dept, immediate_notices=immediate_notices, prescheduled_notices=prescheduled_notices)
         except Exception as e:
             flash("An unexpected error occurred: " + str(e))
             return redirect(url_for('dashboard'))
@@ -184,6 +197,7 @@ def admin(dept):
         flash('Unauthorized access. Please enter department admin password.')
         return redirect(url_for('department', dept=dept))
 
+# For scheduling notices (unchanged)
 @app.route('/schedule_notice/<dept>', methods=['GET', 'POST'])
 def schedule_notice(dept):
     if 'dept' in session and session['dept'] == dept:
@@ -280,7 +294,7 @@ def delete_notice(notice_id):
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-# Public display route: show all notices for a department (they remain until deleted)
+# Public display route: only immediate notices are shown (prescheduled ones are hidden)
 @app.route('/<dept>')
 def public_dept(dept):
     dept = dept.lower()
@@ -289,7 +303,7 @@ def public_dept(dept):
         c = conn.cursor()
         c.execute("""
             SELECT * FROM notices
-            WHERE department=%s
+            WHERE department=%s AND (scheduled_time IS NULL OR scheduled_time <= NOW())
             ORDER BY id DESC
         """, (dept,))
         notices = c.fetchall()
@@ -308,7 +322,7 @@ def get_latest_notices(dept):
         c.execute("""
             SELECT id, department, filename, filetype, scheduled_time
             FROM notices
-            WHERE department=%s
+            WHERE department=%s AND (scheduled_time IS NULL OR scheduled_time <= NOW())
             ORDER BY id DESC
         """, (dept,))
         notices = c.fetchall()

@@ -9,15 +9,15 @@
 
 body {
   font-family: Arial, sans-serif;
-  background-color: #fff; /* changed from #f4f4f4 to #fff */
+  background-color: #fff;
   margin: 0;
   padding: 0;
 }
 
 /* Container for general page content */
 .container {
-  width: 100%; /* changed from 80% to 100% */
-  margin: 0 auto; 
+  width: 100%;
+  margin: 0 auto;
   padding: 0;
 }
 
