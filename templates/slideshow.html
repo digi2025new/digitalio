@@ -2,7 +2,7 @@
 {% block content %}
 <div class="slideshow-container">
   <h2>{{ department | upper }} Slideshow</h2>
-  <div class="slideshow">
+  <div class="slideshow" id="slideshow">
     {% for notice in notices %}
       <div class="slide" style="display: none;">
         {% set file_url = url_for('uploaded_file', filename=notice[2]) %}
@@ -23,27 +23,59 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  let slides = document.querySelectorAll('.slideshow .slide');
-  let currentIndex = 0;
-  let interval;
+  let slideInterval;
 
+  // Function to start the continuous slideshow
   function startSlideshow() {
-    // Hide all slides and reset index
+    const slides = document.querySelectorAll('.slideshow .slide');
+    let currentIndex = 0;
+    // Hide all slides
     slides.forEach(slide => slide.style.display = 'none');
-    currentIndex = 0;
     if (slides.length > 0) {
       slides[currentIndex].style.display = 'block';
-      interval = setInterval(function() {
+      slideInterval = setInterval(function() {
         slides[currentIndex].style.display = 'none';
-        currentIndex = (currentIndex + 1) % slides.length; // Loop continuously
+        currentIndex = (currentIndex + 1) % slides.length;
         slides[currentIndex].style.display = 'block';
-      }, 5000);
+      }, 5000); // change slide every 5 seconds
     }
   }
 
-  startSlideshow();
+  // Function to update slideshow content in real time
+  function updateSlideshow() {
+    fetch("{{ url_for('get_latest_notices', dept=department) }}")
+      .then(response => response.json())
+      .then(data => {
+        const slideshowDiv = document.getElementById('slideshow');
+        let html = "";
+        data.forEach(notice => {
+          const fileUrl = "{{ url_for('uploaded_file', filename='') }}" + notice.filename;
+          if (['png', 'jpg', 'jpeg', 'gif', 'pdf_image'].includes(notice.filetype)) {
+            html += `<div class="slide" style="display: none;"><img src="${fileUrl}" alt="Notice Image"></div>`;
+          } else if (notice.filetype === 'mp4') {
+            html += `<div class="slide" style="display: none;"><video src="${fileUrl}" autoplay muted playsinline></video></div>`;
+          } else if (notice.filetype === 'mp3') {
+            html += `<div class="slide" style="display: none;"><audio src="${fileUrl}" autoplay controls></audio></div>`;
+          } else {
+            html += `<div class="slide" style="display: none;"><a href="${fileUrl}" target="_blank" download>View Document</a></div>`;
+          }
+        });
+        // Update slideshow content and restart the slideshow
+        slideshowDiv.innerHTML = html;
+        clearInterval(slideInterval);
+        startSlideshow();
+      })
+      .catch(error => console.error("Error updating slideshow:", error));
+  }
 
+  // Initialize slideshow on page load
+  startSlideshow();
+  // Poll for updates every 10 seconds
+  setInterval(updateSlideshow, 10000);
+
+  // Restart slideshow on button click
   document.getElementById('restartSlideshow').addEventListener('click', function() {
+    clearInterval(slideInterval);
     startSlideshow();
   });
 });
