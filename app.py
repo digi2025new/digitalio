@@ -2,7 +2,8 @@ import os
 import psycopg2
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory, make_response
 from werkzeug.utils import secure_filename
-from pdf2image import convert_from_path  # New import for PDF conversion
+from pdf2image import convert_from_path  # For PDF conversion
+from datetime import datetime  # New import for scheduling
 
 app = Flask(__name__)
 app.secret_key = 'your_secure_key'  # Change this to a strong, unique key
@@ -20,7 +21,7 @@ DATABASE_URL = os.getenv('DATABASE_URL')
 def get_db_connection():
     return psycopg2.connect(DATABASE_URL)
 
-# Initialize PostgreSQL database with necessary tables
+# Initialize PostgreSQL database with necessary tables (including scheduled_time)
 def init_db():
     conn = get_db_connection()
     c = conn.cursor()
@@ -33,7 +34,8 @@ def init_db():
                     id SERIAL PRIMARY KEY,
                     department TEXT NOT NULL,
                     filename TEXT NOT NULL,
-                    filetype TEXT NOT NULL
+                    filetype TEXT NOT NULL,
+                    scheduled_time TIMESTAMP NULL
                  )''')
     conn.commit()
     conn.close()
@@ -133,11 +135,9 @@ def department(dept):
 @app.route('/admin/<dept>', methods=['GET', 'POST'])
 def admin(dept):
     if 'dept' in session and session['dept'] == dept:
-        if request.method == 'POST':
-            if 'file' not in request.files:
-                flash('No file part.')
-                return redirect(request.url)
+        if request.method == 'POST' and 'file' in request.files:
             file = request.files['file']
+            # Immediate upload handler remains unchanged
             if file.filename == '':
                 flash('No selected file.')
                 return redirect(request.url)
@@ -153,13 +153,12 @@ def admin(dept):
                     try:
                         pages = convert_from_path(file_path, dpi=200)
                         base_filename = filename.rsplit('.', 1)[0]
-                        # For each page, save as image and insert into the database
                         for i, page in enumerate(pages, start=1):
                             image_filename = f"{base_filename}_page_{i}.jpg"
                             image_path = os.path.join(app.config['UPLOAD_FOLDER'], image_filename)
                             page.save(image_path, 'JPEG')
-                            c.execute("INSERT INTO notices (department, filename, filetype) VALUES (%s, %s, %s)",
-                                      (dept, image_filename, 'pdf_image'))
+                            c.execute("INSERT INTO notices (department, filename, filetype, scheduled_time) VALUES (%s, %s, %s, %s)",
+                                      (dept, image_filename, 'pdf_image', None))
                         conn.commit()
                         flash('PDF converted and images uploaded successfully.')
                     except Exception as e:
@@ -167,25 +166,82 @@ def admin(dept):
                         flash('Error converting PDF: ' + str(e))
                     finally:
                         conn.close()
-                    # Optionally, remove the original PDF
                     os.remove(file_path)
                     return redirect(url_for('admin', dept=dept))
                 else:
-                    # For other file types, just insert normally
-                    c.execute("INSERT INTO notices (department, filename, filetype) VALUES (%s, %s, %s)",
-                              (dept, filename, file_extension))
+                    c.execute("INSERT INTO notices (department, filename, filetype, scheduled_time) VALUES (%s, %s, %s, %s)",
+                              (dept, filename, file_extension, None))
                     conn.commit()
                     conn.close()
                     flash('File uploaded successfully.')
                     return redirect(url_for('admin', dept=dept))
         conn = get_db_connection()
         c = conn.cursor()
-        c.execute("SELECT * FROM notices WHERE department=%s", (dept,))
+        # Select all notices for the department (both immediate and scheduled that are active)
+        c.execute("SELECT * FROM notices WHERE department=%s ORDER BY id DESC", (dept,))
         notices = c.fetchall()
         conn.close()
         return render_template('admin.html', department=dept, notices=notices)
     else:
         flash('Unauthorized access. Please enter department admin password.')
+        return redirect(url_for('department', dept=dept))
+
+# New Route: Scheduling a Notice
+@app.route('/schedule_notice/<dept>', methods=['GET', 'POST'])
+def schedule_notice(dept):
+    if 'dept' in session and session['dept'] == dept:
+        if request.method == 'POST':
+            if 'file' not in request.files:
+                flash('No file part.')
+                return redirect(request.url)
+            file = request.files['file']
+            scheduled_time_str = request.form.get('scheduled_time')
+            if file.filename == '' or not scheduled_time_str:
+                flash('Please select a file and scheduled date/time.')
+                return redirect(request.url)
+            if file and allowed_file(file.filename):
+                try:
+                    # Parse the scheduled datetime (expects format from datetime-local input)
+                    scheduled_time = datetime.strptime(scheduled_time_str, '%Y-%m-%dT%H:%M')
+                except ValueError:
+                    flash('Invalid date/time format.')
+                    return redirect(request.url)
+                filename = secure_filename(file.filename)
+                file_extension = filename.rsplit('.', 1)[1].lower()
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(file_path)
+                conn = get_db_connection()
+                c = conn.cursor()
+                # Handle PDF conversion if needed
+                if file_extension == 'pdf':
+                    try:
+                        pages = convert_from_path(file_path, dpi=200)
+                        base_filename = filename.rsplit('.', 1)[0]
+                        for i, page in enumerate(pages, start=1):
+                            image_filename = f"{base_filename}_page_{i}.jpg"
+                            image_path = os.path.join(app.config['UPLOAD_FOLDER'], image_filename)
+                            page.save(image_path, 'JPEG')
+                            c.execute("INSERT INTO notices (department, filename, filetype, scheduled_time) VALUES (%s, %s, %s, %s)",
+                                      (dept, image_filename, 'pdf_image', scheduled_time))
+                        conn.commit()
+                        flash('PDF converted and images scheduled successfully.')
+                    except Exception as e:
+                        conn.rollback()
+                        flash('Error converting PDF: ' + str(e))
+                    finally:
+                        conn.close()
+                    os.remove(file_path)
+                    return redirect(url_for('admin', dept=dept))
+                else:
+                    c.execute("INSERT INTO notices (department, filename, filetype, scheduled_time) VALUES (%s, %s, %s, %s)",
+                              (dept, filename, file_extension, scheduled_time))
+                    conn.commit()
+                    conn.close()
+                    flash('Notice scheduled successfully.')
+                    return redirect(url_for('admin', dept=dept))
+        return render_template('schedule_notice.html', department=dept)
+    else:
+        flash('Unauthorized access.')
         return redirect(url_for('department', dept=dept))
 
 # Delete a notice
@@ -221,14 +277,15 @@ def delete_notice(notice_id):
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-# Public route to view notices department-wise
+# Public route to view notices department-wise (only active notices)
 @app.route('/<dept>')
 def public_dept(dept):
     dept = dept.lower()
     if dept in ['extc', 'it', 'mech', 'cs']:
         conn = get_db_connection()
         c = conn.cursor()
-        c.execute("SELECT * FROM notices WHERE department=%s", (dept,))
+        # Select notices with no scheduled time or where scheduled_time <= now
+        c.execute("SELECT * FROM notices WHERE department=%s AND (scheduled_time IS NULL OR scheduled_time <= NOW())", (dept,))
         notices = c.fetchall()
         conn.close()
         return render_template('public.html', department=dept, notices=notices, timer=5)
@@ -236,13 +293,13 @@ def public_dept(dept):
         flash('Department not found.')
         return redirect(url_for('index'))
 
-# Slideshow route (optional separate view)
+# Slideshow route (shows only active notices)
 @app.route('/slideshow/<dept>')
 def slideshow(dept):
     dept = dept.lower()
     conn = get_db_connection()
     c = conn.cursor()
-    c.execute("SELECT * FROM notices WHERE department=%s", (dept,))
+    c.execute("SELECT * FROM notices WHERE department=%s AND (scheduled_time IS NULL OR scheduled_time <= NOW())", (dept,))
     notices = c.fetchall()
     conn.close()
     return render_template('slideshow.html', department=dept, notices=notices, timer=5)
