@@ -51,10 +51,9 @@ def allowed_file(filename):
 def index():
     return render_template('index.html')
 
-# Signup, login, logout, dashboard, department routes remain unchanged...
+# Signup, login, logout, dashboard, department routes remain unchanged…
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
-    # ... (existing code)
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
@@ -81,7 +80,6 @@ def signup():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    # ... (existing code)
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
@@ -296,7 +294,6 @@ def public_dept(dept):
         """, (dept,))
         notices = c.fetchall()
         conn.close()
-        # Render slideshow template on the public URL
         return render_template('slideshow.html', department=dept, notices=notices)
     else:
         flash('Department not found.')
