@@ -196,6 +196,28 @@ def admin(dept):
         flash('Unauthorized access. Please enter department admin password.')
         return redirect(url_for('department', dept=dept))
 
+# New route: Delete all notices for a department
+@app.route('/delete_all_notices/<dept>', methods=['POST'])
+def delete_all_notices(dept):
+    if 'dept' in session and session['dept'] == dept:
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT filename FROM notices WHERE department=%s", (dept,))
+        filenames = c.fetchall()
+        for (filename,) in filenames:
+            try:
+                os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            except Exception as e:
+                print(e)
+        c.execute("DELETE FROM notices WHERE department=%s", (dept,))
+        conn.commit()
+        conn.close()
+        flash("All notices deleted successfully.")
+        return redirect(url_for('admin', dept=dept))
+    else:
+        flash("Unauthorized access.")
+        return redirect(url_for('login'))
+
 @app.route('/schedule_notice/<dept>', methods=['GET', 'POST'])
 def schedule_notice(dept):
     if 'dept' in session and session['dept'] == dept:
