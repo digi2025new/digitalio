@@ -3,7 +3,7 @@
 <div class="admin-panel">
   <h2>{{ department | upper }} Admin Panel</h2>
   
-  <!-- Upload Notice Section -->
+  <!-- Immediate Upload Notice Section -->
   <div class="upload-section">
     <h3>Upload Notice (Immediate)</h3>
     <form method="POST" action="{{ url_for('admin', dept=department) }}" enctype="multipart/form-data">
@@ -19,7 +19,7 @@
     <a href="{{ url_for('schedule_notice', dept=department) }}" class="btn btn-secondary">Preschedule Notice</a>
   </div>
   
-  <!-- Display Uploaded Notices -->
+  <!-- Display Uploaded/Scheduled Notices -->
   <div class="notices-section">
     <h3>Uploaded/Scheduled Notices</h3>
     <div class="notices-grid">
@@ -40,18 +40,15 @@
              onclick="return confirm('Are you sure you want to delete this notice?');">
             Delete
           </a>
-          {% if notice[4] %}
-            <p>Scheduled for: {{ notice[4] }}</p>
-          {% endif %}
         </div>
       </div>
       {% endfor %}
     </div>
   </div>
   
+  <!-- Navigation -->
   <div class="admin-nav">
     <p><a href="{{ url_for('dashboard') }}">Back to Dashboard</a></p>
-    <p><a href="{{ url_for('slideshow', dept=department) }}">View Slideshow</a></p>
   </div>
 </div>
 {% endblock %}

@@ -23,7 +23,6 @@ def get_db_connection():
 def init_db():
     conn = get_db_connection()
     c = conn.cursor()
-    # Create users table
     c.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
@@ -31,7 +30,6 @@ def init_db():
             password TEXT NOT NULL
         )
     ''')
-    # Create notices table with scheduled_time column
     c.execute('''
         CREATE TABLE IF NOT EXISTS notices (
             id SERIAL PRIMARY KEY,
@@ -282,7 +280,6 @@ def delete_notice(notice_id):
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-# --- Public Department Route (Slideshow Display) ---
 @app.route('/<dept>')
 def public_dept(dept):
     dept = dept.lower()
@@ -296,10 +293,24 @@ def public_dept(dept):
         """, (dept,))
         notices = c.fetchall()
         conn.close()
-        return render_template('slideshow.html', department=dept, notices=notices)
+        return render_template('public.html', department=dept, notices=notices, timer=5)
     else:
         flash('Department not found.')
         return redirect(url_for('index'))
+
+@app.route('/slideshow/<dept>')
+def slideshow(dept):
+    dept = dept.lower()
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute("""
+        SELECT * FROM notices
+        WHERE department=%s AND (scheduled_time IS NULL OR scheduled_time <= NOW())
+        ORDER BY id DESC
+    """, (dept,))
+    notices = c.fetchall()
+    conn.close()
+    return render_template('slideshow.html', department=dept, notices=notices)
 
 @app.route('/get_latest_notices/<dept>')
 def get_latest_notices(dept):

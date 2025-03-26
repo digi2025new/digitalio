@@ -18,20 +18,37 @@
       </div>
     {% endfor %}
   </div>
+  <button id="restartSlideshow" class="btn btn-secondary" style="margin-top: 20px;">Restart Slideshow</button>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   let slides = document.querySelectorAll('.slideshow .slide');
   let currentIndex = 0;
-  if (slides.length > 0) {
-    slides[currentIndex].style.display = 'block';
-    setInterval(function() {
-      slides[currentIndex].style.display = 'none';
-      currentIndex = (currentIndex + 1) % slides.length;
+  let interval;
+
+  function startSlideshow() {
+    // Hide all slides and reset index
+    slides.forEach(slide => slide.style.display = 'none');
+    currentIndex = 0;
+    if (slides.length > 0) {
       slides[currentIndex].style.display = 'block';
-    }, 10000); // 10 seconds per slide
+      interval = setInterval(function() {
+        slides[currentIndex].style.display = 'none';
+        currentIndex++;
+        if (currentIndex >= slides.length) {
+          currentIndex = 0;  // Reset index to loop continuously
+        }
+        slides[currentIndex].style.display = 'block';
+      }, 5000);
+    }
   }
+
+  startSlideshow();
+
+  document.getElementById('restartSlideshow').addEventListener('click', function() {
+    startSlideshow();
+  });
 });
 </script>
 {% endblock %}
