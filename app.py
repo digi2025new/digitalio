@@ -23,6 +23,7 @@ def get_db_connection():
 def init_db():
     conn = get_db_connection()
     c = conn.cursor()
+    # Create users table
     c.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
@@ -30,6 +31,7 @@ def init_db():
             password TEXT NOT NULL
         )
     ''')
+    # Create notices table with scheduled_time column
     c.execute('''
         CREATE TABLE IF NOT EXISTS notices (
             id SERIAL PRIMARY KEY,
@@ -51,7 +53,6 @@ def allowed_file(filename):
 def index():
     return render_template('index.html')
 
-# --- Signup ---
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
@@ -78,7 +79,6 @@ def signup():
             return redirect(url_for('login'))
         return render_template('signup.html')
 
-# --- Login ---
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -99,7 +99,6 @@ def login():
             return redirect(url_for('login'))
     return render_template('login.html')
 
-# --- Logout ---
 @app.route('/logout')
 def logout():
     session.pop('username', None)
@@ -107,7 +106,6 @@ def logout():
     flash('Logged out successfully.')
     return redirect(url_for('index'))
 
-# --- Dashboard ---
 @app.route('/dashboard')
 def dashboard():
     if 'username' in session:
@@ -117,7 +115,6 @@ def dashboard():
         flash('Please login first.')
         return redirect(url_for('login'))
 
-# --- Department Admin Login ---
 @app.route('/department/<dept>', methods=['GET', 'POST'])
 def department(dept):
     if request.method == 'POST':
@@ -130,7 +127,6 @@ def department(dept):
             return redirect(url_for('department', dept=dept))
     return render_template('department.html', department=dept)
 
-# --- Admin Panel ---
 @app.route('/admin/<dept>', methods=['GET', 'POST'])
 def admin(dept):
     if 'dept' in session and session['dept'] == dept:
@@ -190,7 +186,6 @@ def admin(dept):
         flash('Unauthorized access. Please enter department admin password.')
         return redirect(url_for('department', dept=dept))
 
-# --- Schedule Notice ---
 @app.route('/schedule_notice/<dept>', methods=['GET', 'POST'])
 def schedule_notice(dept):
     if 'dept' in session and session['dept'] == dept:
@@ -256,7 +251,6 @@ def schedule_notice(dept):
         flash('Unauthorized access.')
         return redirect(url_for('department', dept=dept))
 
-# --- Delete Notice ---
 @app.route('/delete_notice/<int:notice_id>')
 def delete_notice(notice_id):
     if 'dept' in session:
@@ -284,7 +278,6 @@ def delete_notice(notice_id):
         flash('Unauthorized access.')
         return redirect(url_for('login'))
 
-# --- Serve Uploaded Files ---
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
@@ -308,7 +301,6 @@ def public_dept(dept):
         flash('Department not found.')
         return redirect(url_for('index'))
 
-# --- JSON Endpoint for Real-time Updates (Optional) ---
 @app.route('/get_latest_notices/<dept>')
 def get_latest_notices(dept):
     dept = dept.lower()
