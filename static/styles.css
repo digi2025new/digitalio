@@ -280,20 +280,23 @@ header {
  8. SLIDESHOW
 ---------------------------------------- */
 .slideshow-container {
-  width: 100%;  /* full width to reduce white border */
-  margin: 0;    /* remove default margin */
-  padding: 0;   /* remove padding */
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px;
+  text-align: center;
   background: #fff;
 }
 
 .slideshow {
   position: relative;
-  width: 100%;
-  height: auto;
+  width: 80%;
+  margin: 0 auto;
+  overflow: hidden;
 }
 
 .slide {
   width: 100%;
+  display: none;
   text-align: center;
 }
 
@@ -304,6 +307,7 @@ header {
   height: auto;
   display: block;
   margin: 0 auto;
+  border-radius: 8px;
 }
 
 /* ---------------------------------------
@@ -324,7 +328,6 @@ header {
 /* ---------------------------------------
 10. PUBLIC DISPLAY & SLIDESHOW NOTICES
 ---------------------------------------- */
-/* Container to hold notice elements on public pages */
 #notices-container {
   display: flex;
   flex-wrap: wrap;
@@ -333,7 +336,6 @@ header {
   padding: 20px;
 }
 
-/* Individual notice styling for public pages */
 .notice {
   background: #f9f9f9;
   border: 1px solid #ddd;

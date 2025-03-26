@@ -6,10 +6,8 @@ from pdf2image import convert_from_path
 from datetime import datetime, timezone, timedelta
 
 app = Flask(__name__)
-# Use an environment variable for secret key, or fallback if not set.
+# Use an environment variable for secret key or fallback
 app.secret_key = os.getenv('SECRET_KEY', 'your_fallback_secret_key')
-
-# Optional: Set session lifetime (e.g., 7 days)
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 
 UPLOAD_FOLDER = 'uploads/'
@@ -27,19 +25,23 @@ def init_db():
     conn = get_db_connection()
     c = conn.cursor()
     # Create users table
-    c.execute('''CREATE TABLE IF NOT EXISTS users (
-                    id SERIAL PRIMARY KEY,
-                    username TEXT UNIQUE NOT NULL,
-                    password TEXT NOT NULL
-                 )''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            username TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL
+        )
+    ''')
     # Create notices table with scheduled_time column
-    c.execute('''CREATE TABLE IF NOT EXISTS notices (
-                    id SERIAL PRIMARY KEY,
-                    department TEXT NOT NULL,
-                    filename TEXT NOT NULL,
-                    filetype TEXT NOT NULL,
-                    scheduled_time TIMESTAMP NULL
-                 )''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS notices (
+            id SERIAL PRIMARY KEY,
+            department TEXT NOT NULL,
+            filename TEXT NOT NULL,
+            filetype TEXT NOT NULL,
+            scheduled_time TIMESTAMP NULL
+        )
+    ''')
     conn.commit()
     conn.close()
 
@@ -63,7 +65,7 @@ def signup():
             c.execute("INSERT INTO users (username, password) VALUES (%s, %s)", (username, password))
             conn.commit()
             resp = make_response(redirect(url_for('login')))
-            resp.set_cookie('signed_up', 'true', max_age=30*24*60*60)  # 30 days
+            resp.set_cookie('signed_up', 'true', max_age=30*24*60*60)
             flash('Signup successful. Please login.')
             return resp
         except psycopg2.IntegrityError:
@@ -90,7 +92,7 @@ def login():
         conn.close()
         if user:
             session['username'] = username
-            session.permanent = True  # Make the session permanent
+            session.permanent = True
             flash('Login successful.')
             return redirect(url_for('dashboard'))
         else:
@@ -291,9 +293,9 @@ def slideshow(dept):
     c.execute("SELECT * FROM notices WHERE department=%s AND (scheduled_time IS NULL OR scheduled_time <= NOW()) ORDER BY id DESC", (dept,))
     notices = c.fetchall()
     conn.close()
-    return render_template('slideshow.html', department=dept, notices=notices, timer=5)
-
-# New JSON endpoint for real-time updates
+    return render_template('slideshow.html', department=dept, notices=notices)
+    
+# JSON endpoint for real-time updates
 @app.route('/get_latest_notices/<dept>')
 def get_latest_notices(dept):
     dept = dept.lower()
