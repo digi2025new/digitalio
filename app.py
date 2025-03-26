@@ -51,10 +51,10 @@ def allowed_file(filename):
 def index():
     return render_template('index.html')
 
-# (Signup, login, logout, dashboard, and department routes remain unchanged)
+# Signup, login, logout, dashboard, department routes remain unchanged...
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
-    # ... (your existing signup code)
+    # ... (existing code)
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
@@ -81,7 +81,7 @@ def signup():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    # ... (your existing login code)
+    # ... (existing code)
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
@@ -296,24 +296,11 @@ def public_dept(dept):
         """, (dept,))
         notices = c.fetchall()
         conn.close()
-        return render_template('public.html', department=dept, notices=notices, timer=5)
+        # Render slideshow template on the public URL
+        return render_template('slideshow.html', department=dept, notices=notices)
     else:
         flash('Department not found.')
         return redirect(url_for('index'))
-
-@app.route('/slideshow/<dept>')
-def slideshow(dept):
-    dept = dept.lower()
-    conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("""
-        SELECT * FROM notices
-        WHERE department=%s AND (scheduled_time IS NULL OR scheduled_time <= NOW())
-        ORDER BY id DESC
-    """, (dept,))
-    notices = c.fetchall()
-    conn.close()
-    return render_template('slideshow.html', department=dept, notices=notices)
 
 @app.route('/get_latest_notices/<dept>')
 def get_latest_notices(dept):
