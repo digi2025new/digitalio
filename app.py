@@ -51,10 +51,10 @@ def allowed_file(filename):
 def index():
     return render_template('index.html')
 
-# --- Signup, Login, Logout, Dashboard, Department routes (unchanged) ---
+# Signup, login, logout, dashboard, department routes remain unchanged...
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
-    # (existing signup logic)
+    # ... (existing code)
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
@@ -81,7 +81,7 @@ def signup():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    # (existing login logic)
+    # ... (existing code)
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
@@ -128,7 +128,6 @@ def department(dept):
             return redirect(url_for('department', dept=dept))
     return render_template('department.html', department=dept)
 
-# --- Admin Panel ---
 @app.route('/admin/<dept>', methods=['GET', 'POST'])
 def admin(dept):
     if 'dept' in session and session['dept'] == dept:
@@ -188,7 +187,6 @@ def admin(dept):
         flash('Unauthorized access. Please enter department admin password.')
         return redirect(url_for('department', dept=dept))
 
-# --- Schedule Notice ---
 @app.route('/schedule_notice/<dept>', methods=['GET', 'POST'])
 def schedule_notice(dept):
     if 'dept' in session and session['dept'] == dept:
@@ -254,7 +252,6 @@ def schedule_notice(dept):
         flash('Unauthorized access.')
         return redirect(url_for('department', dept=dept))
 
-# --- Delete Notice ---
 @app.route('/delete_notice/<int:notice_id>')
 def delete_notice(notice_id):
     if 'dept' in session:
@@ -282,12 +279,10 @@ def delete_notice(notice_id):
         flash('Unauthorized access.')
         return redirect(url_for('login'))
 
-# --- Serve Uploaded Files ---
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-# --- Public Slideshow Route ---
 @app.route('/<dept>')
 def public_dept(dept):
     dept = dept.lower()
@@ -301,7 +296,7 @@ def public_dept(dept):
         """, (dept,))
         notices = c.fetchall()
         conn.close()
-        # Render the slideshow template on public URL
+        # Render slideshow template on the public URL
         return render_template('slideshow.html', department=dept, notices=notices)
     else:
         flash('Department not found.')
