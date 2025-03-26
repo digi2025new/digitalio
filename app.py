@@ -298,7 +298,6 @@ def public_dept(dept):
         flash('Department not found.')
         return redirect(url_for('index'))
 
-# Updated slideshow route with endpoint name 'slideshow'
 @app.route('/slideshow/<dept>')
 def slideshow(dept):
     dept = dept.lower()

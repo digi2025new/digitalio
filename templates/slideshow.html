@@ -37,10 +37,9 @@ document.addEventListener('DOMContentLoaded', function() {
         slides[currentIndex].style.display = 'none';
         currentIndex++;
         if (currentIndex >= slides.length) {
-          clearInterval(interval); // Stop after last slide
-        } else {
-          slides[currentIndex].style.display = 'block';
+          currentIndex = 0;  // Reset index to loop continuously
         }
+        slides[currentIndex].style.display = 'block';
       }, 5000);
     }
   }
