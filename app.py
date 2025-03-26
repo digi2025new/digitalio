@@ -128,54 +128,58 @@ def department(dept):
 @app.route('/admin/<dept>', methods=['GET', 'POST'])
 def admin(dept):
     if 'dept' in session and session['dept'] == dept:
-        if request.method == 'POST' and 'file' in request.files:
-            file = request.files['file']
-            if file.filename == '':
-                flash('No selected file.')
-                return redirect(request.url)
-            if file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                file_extension = filename.rsplit('.', 1)[1].lower()
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                file.save(file_path)
-                conn = get_db_connection()
-                c = conn.cursor()
-                if file_extension == 'pdf':
-                    try:
-                        pages = convert_from_path(file_path, dpi=200)
-                        base_filename = filename.rsplit('.', 1)[0]
-                        for i, page in enumerate(pages, start=1):
-                            image_filename = f"{base_filename}_page_{i}.jpg"
-                            image_path = os.path.join(app.config['UPLOAD_FOLDER'], image_filename)
-                            page.save(image_path, 'JPEG')
-                            c.execute("""
-                                INSERT INTO notices (department, filename, filetype, scheduled_time)
-                                VALUES (%s, %s, %s, %s)
-                            """, (dept, image_filename, 'pdf_image', None))
+        try:
+            if request.method == 'POST' and 'file' in request.files:
+                file = request.files['file']
+                if file.filename == '':
+                    flash('No selected file.')
+                    return redirect(request.url)
+                if file and allowed_file(file.filename):
+                    filename = secure_filename(file.filename)
+                    file_extension = filename.rsplit('.', 1)[1].lower()
+                    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    file.save(file_path)
+                    conn = get_db_connection()
+                    c = conn.cursor()
+                    if file_extension == 'pdf':
+                        try:
+                            pages = convert_from_path(file_path, dpi=200)
+                            base_filename = filename.rsplit('.', 1)[0]
+                            for i, page in enumerate(pages, start=1):
+                                image_filename = f"{base_filename}_page_{i}.jpg"
+                                image_path = os.path.join(app.config['UPLOAD_FOLDER'], image_filename)
+                                page.save(image_path, 'JPEG')
+                                c.execute("""
+                                    INSERT INTO notices (department, filename, filetype, scheduled_time)
+                                    VALUES (%s, %s, %s, %s)
+                                """, (dept, image_filename, 'pdf_image', None))
+                            conn.commit()
+                            flash('PDF converted and images uploaded successfully.')
+                        except Exception as e:
+                            conn.rollback()
+                            flash('Error converting PDF: ' + str(e))
+                        finally:
+                            conn.close()
+                        os.remove(file_path)
+                        return redirect(url_for('admin', dept=dept))
+                    else:
+                        c.execute("""
+                            INSERT INTO notices (department, filename, filetype, scheduled_time)
+                            VALUES (%s, %s, %s, %s)
+                        """, (dept, filename, file_extension, None))
                         conn.commit()
-                        flash('PDF converted and images uploaded successfully.')
-                    except Exception as e:
-                        conn.rollback()
-                        flash('Error converting PDF: ' + str(e))
-                    finally:
                         conn.close()
-                    os.remove(file_path)
-                    return redirect(url_for('admin', dept=dept))
-                else:
-                    c.execute("""
-                        INSERT INTO notices (department, filename, filetype, scheduled_time)
-                        VALUES (%s, %s, %s, %s)
-                    """, (dept, filename, file_extension, None))
-                    conn.commit()
-                    conn.close()
-                    flash('File uploaded successfully.')
-                    return redirect(url_for('admin', dept=dept))
-        conn = get_db_connection()
-        c = conn.cursor()
-        c.execute("SELECT * FROM notices WHERE department=%s ORDER BY id DESC", (dept,))
-        notices = c.fetchall()
-        conn.close()
-        return render_template('admin.html', department=dept, notices=notices)
+                        flash('File uploaded successfully.')
+                        return redirect(url_for('admin', dept=dept))
+            conn = get_db_connection()
+            c = conn.cursor()
+            c.execute("SELECT * FROM notices WHERE department=%s ORDER BY id DESC", (dept,))
+            notices = c.fetchall()
+            conn.close()
+            return render_template('admin.html', department=dept, notices=notices)
+        except Exception as e:
+            flash("An unexpected error occurred: " + str(e))
+            return redirect(url_for('dashboard'))
     else:
         flash('Unauthorized access. Please enter department admin password.')
         return redirect(url_for('department', dept=dept))
@@ -189,7 +193,7 @@ def schedule_notice(dept):
                 return redirect(request.url)
             file = request.files['file']
             date_str = request.form.get('date')   # Expected: YYYY-MM-DD
-            time_str = request.form.get('time')     # Expected: hh:mm (12-hour format)
+            time_str = request.form.get('time')     # Expected: hh:mm (12-hour)
             ampm = request.form.get('ampm')         # "AM" or "PM"
             if file.filename == '' or not (date_str and time_str and ampm):
                 flash('Please select a file and scheduled date/time.')
@@ -308,7 +312,6 @@ def slideshow_route(dept):
     conn.close()
     return render_template('slideshow.html', department=dept, notices=notices)
 
-# JSON endpoint for real-time updates (if needed)
 @app.route('/get_latest_notices/<dept>')
 def get_latest_notices(dept):
     dept = dept.lower()
