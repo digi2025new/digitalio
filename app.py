@@ -3,7 +3,7 @@ import psycopg2
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory, make_response
 from werkzeug.utils import secure_filename
 from pdf2image import convert_from_path  # For PDF conversion
-from datetime import datetime, timezone, timedelta  # For scheduled notices and timezone conversion
+from datetime import datetime, timezone, timedelta  # For scheduling and timezone conversion
 
 app = Flask(__name__)
 # Set secret key from environment variable or fallback
@@ -179,12 +179,13 @@ def admin(dept):
         conn.close()
         return render_template('admin.html', department=dept, notices=notices)
     else:
-        flash('Unauthorized access. Please enter department admin password.')
+        flash('Unauthorized access. Please login as the correct department admin.')
         return redirect(url_for('department', dept=dept))
 
 # New route: Scheduling a Notice (with separate date, time, and AM/PM inputs)
 @app.route('/schedule_notice/<dept>', methods=['GET', 'POST'])
 def schedule_notice(dept):
+    # Ensure that only the logged-in admin for the department can schedule notices.
     if 'dept' in session and session['dept'] == dept:
         if request.method == 'POST':
             if 'file' not in request.files:
@@ -246,7 +247,7 @@ def schedule_notice(dept):
                     return redirect(url_for('admin', dept=dept))
         return render_template('schedule_notice.html', department=dept)
     else:
-        flash('Unauthorized access.')
+        flash('Unauthorized access. Please login as the correct department admin.')
         return redirect(url_for('department', dept=dept))
 
 # Delete a notice
@@ -282,7 +283,7 @@ def delete_notice(notice_id):
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-# Public route: View active notices (immediate or scheduled that have passed)
+# Public route: View active notices for a department
 @app.route('/<dept>')
 def public_dept(dept):
     dept = dept.lower()
@@ -297,7 +298,7 @@ def public_dept(dept):
         flash('Department not found.')
         return redirect(url_for('index'))
 
-# Slideshow route: Shows only active notices
+# Slideshow route: Shows only active notices for a department
 @app.route('/slideshow/<dept>')
 def slideshow(dept):
     dept = dept.lower()
