@@ -196,7 +196,6 @@ def admin(dept):
         flash('Unauthorized access. Please enter department admin password.')
         return redirect(url_for('department', dept=dept))
 
-# New route: Delete all notices for a department
 @app.route('/delete_all_notices/<dept>', methods=['POST'])
 def delete_all_notices(dept):
     if 'dept' in session and session['dept'] == dept:

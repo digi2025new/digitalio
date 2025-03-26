@@ -9,7 +9,7 @@
 
 body {
   font-family: Arial, sans-serif;
-  background-color: #fff; /* changed from #f4f4f4 to #fff */
+  background-color: #fff;
   margin: 0;
   padding: 0;
 }
@@ -280,7 +280,9 @@ header {
   text-decoration: underline;
 }
 
-/* Modal styling for deletion confirmation */
+/* ---------------------------------------
+Modal styling for deletion confirmation
+---------------------------------------- */
 .modal {
   display: none;
   position: fixed;
