@@ -173,14 +173,14 @@ def admin(dept):
                         return redirect(url_for('admin', dept=dept))
             conn = get_db_connection()
             c = conn.cursor()
-            # Immediate notices: those with scheduled_time NULL or ≤ NOW()
+            # Immediate notices: scheduled_time is NULL or <= NOW()
             c.execute("""
                 SELECT * FROM notices 
                 WHERE department=%s AND (scheduled_time IS NULL OR scheduled_time <= NOW())
                 ORDER BY id DESC
             """, (dept,))
             immediate_notices = c.fetchall()
-            # Prescheduled notices: those with scheduled_time > NOW()
+            # Prescheduled notices: scheduled_time > NOW()
             c.execute("""
                 SELECT * FROM notices 
                 WHERE department=%s AND scheduled_time > NOW()
@@ -292,7 +292,7 @@ def delete_notice(notice_id):
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-# Public display route: show all uploaded notices continuously in a loop
+# Public display route: show only immediate notices (scheduled_time is NULL or <= NOW())
 @app.route('/<dept>')
 def public_dept(dept):
     dept = dept.lower()
@@ -301,7 +301,7 @@ def public_dept(dept):
         c = conn.cursor()
         c.execute("""
             SELECT * FROM notices
-            WHERE department=%s
+            WHERE department=%s AND (scheduled_time IS NULL OR scheduled_time <= NOW())
             ORDER BY id DESC
         """, (dept,))
         notices = c.fetchall()
@@ -320,7 +320,7 @@ def get_latest_notices(dept):
         c.execute("""
             SELECT id, department, filename, filetype, scheduled_time
             FROM notices
-            WHERE department=%s
+            WHERE department=%s AND (scheduled_time IS NULL OR scheduled_time <= NOW())
             ORDER BY id DESC
         """, (dept,))
         notices = c.fetchall()
