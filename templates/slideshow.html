@@ -29,7 +29,6 @@ document.addEventListener('DOMContentLoaded', function() {
   function showSlide(index) {
     slides.forEach(slide => slide.style.display = 'none');
     slides[index].style.display = 'block';
-    // If the current slide contains a video, wait for it to finish
     const video = slides[index].querySelector('video');
     if (video) {
       video.currentTime = 0;
@@ -68,5 +67,18 @@ document.addEventListener('DOMContentLoaded', function() {
             html += `<div class="slide" style="display: none;"><a href="${fileUrl}" target="_blank" download>View Document</a></div>`;
           }
         });
-        // Update slideshow content and restart slideshow
-       
+        slideshowDiv.innerHTML = html;
+        clearTimeout(slideInterval);
+        slides = document.querySelectorAll('.slideshow .slide');
+        startSlideshow();
+      })
+      .catch(error => console.error("Error updating slideshow:", error));
+  }
+
+  // Initialize slideshow on page load
+  startSlideshow();
+  // Poll for updates every 5 seconds
+  setInterval(updateSlideshow, 5000);
+});
+</script>
+{% endblock %}
