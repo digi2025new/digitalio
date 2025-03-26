@@ -192,9 +192,9 @@ def schedule_notice(dept):
                 flash('No file part.')
                 return redirect(request.url)
             file = request.files['file']
-            date_str = request.form.get('date')   # Expected: YYYY-MM-DD
-            time_str = request.form.get('time')     # Expected: hh:mm (12-hour)
-            ampm = request.form.get('ampm')         # "AM" or "PM"
+            date_str = request.form.get('date')
+            time_str = request.form.get('time')
+            ampm = request.form.get('ampm')
             if file.filename == '' or not (date_str and time_str and ampm):
                 flash('Please select a file and scheduled date/time.')
                 return redirect(request.url)
@@ -298,8 +298,9 @@ def public_dept(dept):
         flash('Department not found.')
         return redirect(url_for('index'))
 
+# Updated slideshow route with endpoint name 'slideshow'
 @app.route('/slideshow/<dept>')
-def slideshow_route(dept):
+def slideshow(dept):
     dept = dept.lower()
     conn = get_db_connection()
     c = conn.cursor()
