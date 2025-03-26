@@ -6,7 +6,6 @@ from pdf2image import convert_from_path
 from datetime import datetime, timezone, timedelta
 
 app = Flask(__name__)
-# Use an environment variable for secret key or fallback
 app.secret_key = os.getenv('SECRET_KEY', 'your_fallback_secret_key')
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 
@@ -24,7 +23,6 @@ def get_db_connection():
 def init_db():
     conn = get_db_connection()
     c = conn.cursor()
-    # Create users table
     c.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
@@ -32,7 +30,6 @@ def init_db():
             password TEXT NOT NULL
         )
     ''')
-    # Create notices table with scheduled_time column
     c.execute('''
         CREATE TABLE IF NOT EXISTS notices (
             id SERIAL PRIMARY KEY,
@@ -151,8 +148,10 @@ def admin(dept):
                             image_filename = f"{base_filename}_page_{i}.jpg"
                             image_path = os.path.join(app.config['UPLOAD_FOLDER'], image_filename)
                             page.save(image_path, 'JPEG')
-                            c.execute("INSERT INTO notices (department, filename, filetype, scheduled_time) VALUES (%s, %s, %s, %s)",
-                                      (dept, image_filename, 'pdf_image', None))
+                            c.execute("""
+                                INSERT INTO notices (department, filename, filetype, scheduled_time)
+                                VALUES (%s, %s, %s, %s)
+                            """, (dept, image_filename, 'pdf_image', None))
                         conn.commit()
                         flash('PDF converted and images uploaded successfully.')
                     except Exception as e:
@@ -163,8 +162,10 @@ def admin(dept):
                     os.remove(file_path)
                     return redirect(url_for('admin', dept=dept))
                 else:
-                    c.execute("INSERT INTO notices (department, filename, filetype, scheduled_time) VALUES (%s, %s, %s, %s)",
-                              (dept, filename, file_extension, None))
+                    c.execute("""
+                        INSERT INTO notices (department, filename, filetype, scheduled_time)
+                        VALUES (%s, %s, %s, %s)
+                    """, (dept, filename, file_extension, None))
                     conn.commit()
                     conn.close()
                     flash('File uploaded successfully.')
@@ -188,8 +189,8 @@ def schedule_notice(dept):
                 return redirect(request.url)
             file = request.files['file']
             date_str = request.form.get('date')   # Expected: YYYY-MM-DD
-            time_str = request.form.get('time')   # Expected: hh:mm in 12-hour format
-            ampm = request.form.get('ampm')        # "AM" or "PM"
+            time_str = request.form.get('time')     # Expected: hh:mm (12-hour format)
+            ampm = request.form.get('ampm')         # "AM" or "PM"
             if file.filename == '' or not (date_str and time_str and ampm):
                 flash('Please select a file and scheduled date/time.')
                 return redirect(request.url)
@@ -217,8 +218,10 @@ def schedule_notice(dept):
                             image_filename = f"{base_filename}_page_{i}.jpg"
                             image_path = os.path.join(app.config['UPLOAD_FOLDER'], image_filename)
                             page.save(image_path, 'JPEG')
-                            c.execute("INSERT INTO notices (department, filename, filetype, scheduled_time) VALUES (%s, %s, %s, %s)",
-                                      (dept, image_filename, 'pdf_image', utc_dt))
+                            c.execute("""
+                                INSERT INTO notices (department, filename, filetype, scheduled_time)
+                                VALUES (%s, %s, %s, %s)
+                            """, (dept, image_filename, 'pdf_image', utc_dt))
                         conn.commit()
                         flash('PDF converted and images scheduled successfully.')
                     except Exception as e:
@@ -229,8 +232,10 @@ def schedule_notice(dept):
                     os.remove(file_path)
                     return redirect(url_for('admin', dept=dept))
                 else:
-                    c.execute("INSERT INTO notices (department, filename, filetype, scheduled_time) VALUES (%s, %s, %s, %s)",
-                              (dept, filename, file_extension, utc_dt))
+                    c.execute("""
+                        INSERT INTO notices (department, filename, filetype, scheduled_time)
+                        VALUES (%s, %s, %s, %s)
+                    """, (dept, filename, file_extension, utc_dt))
                     conn.commit()
                     conn.close()
                     flash('Notice scheduled successfully.')
@@ -277,7 +282,11 @@ def public_dept(dept):
     if dept in ['extc', 'it', 'mech', 'cs']:
         conn = get_db_connection()
         c = conn.cursor()
-        c.execute("SELECT * FROM notices WHERE department=%s AND (scheduled_time IS NULL OR scheduled_time <= NOW()) ORDER BY id DESC", (dept,))
+        c.execute("""
+            SELECT * FROM notices
+            WHERE department=%s AND (scheduled_time IS NULL OR scheduled_time <= NOW())
+            ORDER BY id DESC
+        """, (dept,))
         notices = c.fetchall()
         conn.close()
         return render_template('public.html', department=dept, notices=notices, timer=5)
@@ -286,16 +295,20 @@ def public_dept(dept):
         return redirect(url_for('index'))
 
 @app.route('/slideshow/<dept>')
-def slideshow(dept):
+def slideshow_route(dept):
     dept = dept.lower()
     conn = get_db_connection()
     c = conn.cursor()
-    c.execute("SELECT * FROM notices WHERE department=%s AND (scheduled_time IS NULL OR scheduled_time <= NOW()) ORDER BY id DESC", (dept,))
+    c.execute("""
+        SELECT * FROM notices
+        WHERE department=%s AND (scheduled_time IS NULL OR scheduled_time <= NOW())
+        ORDER BY id DESC
+    """, (dept,))
     notices = c.fetchall()
     conn.close()
     return render_template('slideshow.html', department=dept, notices=notices)
-    
-# JSON endpoint for real-time updates
+
+# JSON endpoint for real-time updates (if needed)
 @app.route('/get_latest_notices/<dept>')
 def get_latest_notices(dept):
     dept = dept.lower()
@@ -303,8 +316,8 @@ def get_latest_notices(dept):
         conn = get_db_connection()
         c = conn.cursor()
         c.execute("""
-            SELECT id, department, filename, filetype, scheduled_time 
-            FROM notices 
+            SELECT id, department, filename, filetype, scheduled_time
+            FROM notices
             WHERE department=%s AND (scheduled_time IS NULL OR scheduled_time <= NOW())
             ORDER BY id DESC
         """, (dept,))
