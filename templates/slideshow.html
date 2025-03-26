@@ -22,23 +22,20 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  const slides = document.querySelectorAll('.slideshow .slide');
+  let slideInterval;
+  let slides = document.querySelectorAll('.slideshow .slide');
   let currentIndex = 0;
-  let slideTimeout;
 
   function showSlide(index) {
-    // Hide all slides first
     slides.forEach(slide => slide.style.display = 'none');
     slides[index].style.display = 'block';
-
-    // If slide contains a video, wait until video ends before moving on.
+    // If the current slide contains a video, wait for it to finish
     const video = slides[index].querySelector('video');
     if (video) {
       video.currentTime = 0;
       video.onended = nextSlide;
     } else {
-      // Otherwise, wait 5 seconds then show next slide.
-      slideTimeout = setTimeout(nextSlide, 5000);
+      slideInterval = setTimeout(nextSlide, 5000);
     }
   }
 
@@ -47,9 +44,29 @@ document.addEventListener('DOMContentLoaded', function() {
     showSlide(currentIndex);
   }
 
-  if (slides.length > 0) {
+  function startSlideshow() {
+    currentIndex = 0;
     showSlide(currentIndex);
   }
-});
-</script>
-{% endblock %}
+
+  // Function to update slideshow content in real time
+  function updateSlideshow() {
+    fetch("{{ url_for('get_latest_notices', dept=department) }}")
+      .then(response => response.json())
+      .then(data => {
+        const slideshowDiv = document.getElementById('slideshow');
+        let html = "";
+        data.forEach(notice => {
+          const fileUrl = "{{ url_for('uploaded_file', filename='') }}" + notice.filename;
+          if (['png', 'jpg', 'jpeg', 'gif', 'pdf_image'].includes(notice.filetype)) {
+            html += `<div class="slide" style="display: none;"><img src="${fileUrl}" alt="Notice Image" class="responsive-media"></div>`;
+          } else if (notice.filetype === 'mp4') {
+            html += `<div class="slide" style="display: none;"><video src="${fileUrl}" autoplay muted playsinline class="responsive-media"></video></div>`;
+          } else if (notice.filetype === 'mp3') {
+            html += `<div class="slide" style="display: none;"><audio src="${fileUrl}" autoplay controls class="responsive-media"></audio></div>`;
+          } else {
+            html += `<div class="slide" style="display: none;"><a href="${fileUrl}" target="_blank" download>View Document</a></div>`;
+          }
+        });
+        // Update slideshow content and restart slideshow
+       
