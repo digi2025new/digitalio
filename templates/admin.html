@@ -38,7 +38,7 @@
           <a href="{{ file_url }}" target="_blank">View Document</a>
         {% endif %}
         <div class="notice-actions">
-          {% if notice[0]|string != "" %}
+          {% if notice[0] is not none %}
           <a href="{{ url_for('delete_notice', notice_id=notice[0]) }}" class="btn btn-danger"
              onclick="return confirm('Are you sure you want to delete this notice?');">
             Delete
@@ -68,7 +68,7 @@
           <a href="{{ file_url }}" target="_blank">View Document</a>
         {% endif %}
         <div class="notice-actions">
-          {% if notice[0]|string != "" %}
+          {% if notice[0] is not none %}
           <a href="{{ url_for('delete_notice', notice_id=notice[0]) }}" class="btn btn-danger"
              onclick="return confirm('Are you sure you want to delete this notice?');">
             Delete
@@ -86,70 +86,4 @@
     <p><a href="{{ url_for('dashboard') }}">Back to Dashboard</a></p>
   </div>
 </div>
-
-<!-- Modal for deletion confirmation -->
-<div id="deleteModal" class="modal">
-  <div class="modal-content">
-    <span class="close" onclick="closeModal()">&times;</span>
-    <p>Are you sure you want to delete this notice?</p>
-    <button class="btn btn-danger" id="confirmDeleteBtn">Yes, Delete</button>
-    <button class="btn" onclick="closeModal()">Cancel</button>
-  </div>
-</div>
-
-<script>
-let noticeToDelete = null;
-
-function confirmDelete(noticeId) {
-  noticeToDelete = noticeId;
-  document.getElementById('deleteModal').style.display = 'block';
-}
-
-function closeModal() {
-  document.getElementById('deleteModal').style.display = 'none';
-  noticeToDelete = null;
-}
-
-document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
-  if (noticeToDelete !== null) {
-    window.location.href = "{{ url_for('delete_notice', notice_id='') }}" + noticeToDelete;
-  }
-});
-</script>
-
-<style>
-/* Modal styling */
-.modal {
-  display: none;
-  position: fixed;
-  z-index: 100;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  background-color: rgba(0,0,0,0.4);
-}
-.modal-content {
-  background-color: #fefefe;
-  margin: 15% auto;
-  padding: 20px;
-  border: 1px solid #888;
-  width: 80%;
-  max-width: 400px;
-  text-align: center;
-  border-radius: 8px;
-}
-.close {
-  color: #aaa;
-  float: right;
-  font-size: 28px;
-  font-weight: bold;
-  cursor: pointer;
-}
-.close:hover,
-.close:focus {
-  color: black;
-}
-</style>
 {% endblock %}
