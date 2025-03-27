@@ -360,6 +360,5 @@ def get_latest_notices(dept):
         return jsonify([])
 
 if __name__ == '__main__':
-    # Use a default port if the PORT environment variable is not set or empty
     port = int(os.environ.get("PORT") or 5000)
     app.run(host="0.0.0.0", port=port)
