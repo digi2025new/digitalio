@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="admin-panel">
-  <h2>{{ department | upper }} Admin Panel</h2>
+  <h2 class="center-text">{{ department | upper }} Admin Panel</h2>
   
-  <div class="admin-actions">
+  <div class="admin-actions center-text">
     <div class="upload-section">
       <h3>Upload Notice (Immediate)</h3>
       <form method="POST" action="{{ url_for('admin', dept=department) }}" enctype="multipart/form-data">
@@ -25,7 +25,7 @@
   </div>
   
   <div class="notices-section">
-    <h3>Uploaded Immediate Notices</h3>
+    <h3 class="center-text">Uploaded Immediate Notices</h3>
     <div class="notices-grid">
       {% for notice in immediate_notices %}
       <div class="notice-card">
@@ -55,7 +55,7 @@
   </div>
   
   <div class="notices-section">
-    <h3>Prescheduled Notices</h3>
+    <h3 class="center-text">Prescheduled Notices</h3>
     <div class="notices-grid">
       {% for notice in prescheduled_notices %}
       <div class="notice-card">
@@ -84,7 +84,7 @@
     </div>
   </div>
   
-  <div class="admin-nav">
+  <div class="admin-nav center-text">
     <p><a href="{{ url_for('dashboard') }}">Back to Dashboard</a></p>
   </div>
 </div>

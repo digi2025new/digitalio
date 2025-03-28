@@ -75,7 +75,10 @@ header {
 .hero::after {
   content: "";
   position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0; 
+  left: 0; 
+  right: 0; 
+  bottom: 0;
   background: rgba(0, 0, 0, 0.5);
 }
 
@@ -222,7 +225,6 @@ header {
   text-align: center;
 }
 
-/* Flexbox grid for notices – this is mainly for public display pages */
 .notices-grid {
   display: flex;
   flex-wrap: wrap;
@@ -327,4 +329,11 @@ header {
     flex: 1 1 100%;
     max-width: 100%;
   }
+}
+
+/* ---------------------------------------
+ 11. UTILITY CLASSES
+---------------------------------------- */
+.center-text {
+  text-align: center;
 }
