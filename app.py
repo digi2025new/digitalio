@@ -34,7 +34,7 @@ def init_db():
             password TEXT NOT NULL
         )
     ''')
-    # Create notices table (if not exists) with expire_time column
+    # Create notices table if not exists (including expire_time column)
     c.execute('''
         CREATE TABLE IF NOT EXISTS notices (
             id SERIAL PRIMARY KEY,
@@ -133,6 +133,10 @@ def department(dept):
             return redirect(url_for('department', dept=dept))
     return render_template('department.html', department=dept)
 
+############################################
+# ADMIN ROUTE: Now shows ALL notices,
+# ignoring expire_time for the admin panel
+############################################
 @app.route('/admin/<dept>', methods=['GET', 'POST'])
 def admin(dept):
     if 'dept' in session and session['dept'] == dept:
@@ -147,7 +151,8 @@ def admin(dept):
                     file_extension = filename.rsplit('.', 1)[1].lower()
                     file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                     file.save(file_path)
-                    # Get optional expiration date (in IST). If provided, parse it; else default to 30 days from now.
+
+                    # Optional expiration date
                     expire_date_str = request.form.get('expire_date')
                     ist = timezone(timedelta(hours=5, minutes=30))
                     if expire_date_str and expire_date_str.strip() != "":
@@ -155,13 +160,16 @@ def admin(dept):
                             expire_dt = datetime.strptime(expire_date_str, "%Y-%m-%d")
                             expire_dt = expire_dt.replace(hour=23, minute=59, second=59, tzinfo=ist)
                             expire_time = expire_dt.astimezone(timezone.utc)
-                        except Exception as e:
+                        except Exception:
                             flash("Invalid expiration date format.")
                             return redirect(request.url)
                     else:
                         expire_time = datetime.utcnow().replace(tzinfo=timezone.utc) + timedelta(days=30)
+
                     conn = get_db_connection()
                     c = conn.cursor()
+
+                    # If it's a PDF, convert to images
                     if file_extension == 'pdf':
                         try:
                             pages = convert_from_path(file_path, dpi=200)
@@ -183,36 +191,42 @@ def admin(dept):
                             conn.close()
                         os.remove(file_path)
                         return redirect(url_for('admin', dept=dept))
-                    else:
-                        c.execute("""
-                            INSERT INTO notices (department, filename, filetype, scheduled_time, expire_time)
-                            VALUES (%s, %s, %s, %s, %s)
-                        """, (dept, filename, file_extension, None, expire_time))
-                        conn.commit()
-                        conn.close()
-                        flash('File uploaded successfully.')
-                        return redirect(url_for('admin', dept=dept))
+
+                    # Otherwise, just save the file as is
+                    c.execute("""
+                        INSERT INTO notices (department, filename, filetype, scheduled_time, expire_time)
+                        VALUES (%s, %s, %s, %s, %s)
+                    """, (dept, filename, file_extension, None, expire_time))
+                    conn.commit()
+                    conn.close()
+                    flash('File uploaded successfully.')
+                    return redirect(url_for('admin', dept=dept))
+
+            # Show ALL immediate notices (no expire_time check)
             conn = get_db_connection()
             c = conn.cursor()
-            # Only show notices that are not expired.
             c.execute("""
-                SELECT * FROM notices 
-                WHERE department=%s 
+                SELECT * FROM notices
+                WHERE department=%s
                 AND (scheduled_time IS NULL OR scheduled_time <= NOW())
-                AND expire_time > NOW()
                 ORDER BY id DESC
             """, (dept,))
             immediate_notices = c.fetchall()
+
+            # Show ALL prescheduled notices (no expire_time check)
             c.execute("""
-                SELECT * FROM notices 
-                WHERE department=%s 
+                SELECT * FROM notices
+                WHERE department=%s
                 AND scheduled_time > NOW()
-                AND expire_time > NOW()
                 ORDER BY id DESC
             """, (dept,))
             prescheduled_notices = c.fetchall()
+
             conn.close()
-            return render_template('admin.html', department=dept, immediate_notices=immediate_notices, prescheduled_notices=prescheduled_notices)
+            return render_template('admin.html',
+                                   department=dept,
+                                   immediate_notices=immediate_notices,
+                                   prescheduled_notices=prescheduled_notices)
         except Exception as e:
             flash("An unexpected error occurred: " + str(e))
             return redirect(url_for('dashboard'))
@@ -258,14 +272,15 @@ def schedule_notice(dept):
             if file and allowed_file(file.filename):
                 try:
                     scheduled_time_str = f"{date_str} {time_str} {ampm}"
-                    naive_dt = datetime.strptime(scheduled_time_str, "%Y-%m-%d %I:%M %p")
                     ist = timezone(timedelta(hours=5, minutes=30))
+                    naive_dt = datetime.strptime(scheduled_time_str, "%Y-%m-%d %I:%M %p")
                     ist_dt = naive_dt.replace(tzinfo=ist)
                     utc_dt = ist_dt.astimezone(timezone.utc)
                 except ValueError:
                     flash('Invalid date/time format. Please use the correct format (e.g., 02:30 PM).')
                     return redirect(request.url)
-                # Get optional expiration date; if not provided, default to scheduled_time + 30 days.
+
+                # Expiration date (optional)
                 expire_date_str = request.form.get('expire_date')
                 ist = timezone(timedelta(hours=5, minutes=30))
                 if expire_date_str and expire_date_str.strip() != "":
@@ -273,15 +288,17 @@ def schedule_notice(dept):
                         expire_dt = datetime.strptime(expire_date_str, "%Y-%m-%d")
                         expire_dt = expire_dt.replace(hour=23, minute=59, second=59, tzinfo=ist)
                         expire_time = expire_dt.astimezone(timezone.utc)
-                    except Exception as e:
+                    except Exception:
                         flash("Invalid expiration date format.")
                         return redirect(request.url)
                 else:
                     expire_time = utc_dt + timedelta(days=30)
+
                 filename = secure_filename(file.filename)
                 file_extension = filename.rsplit('.', 1)[1].lower()
                 file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 file.save(file_path)
+
                 conn = get_db_connection()
                 c = conn.cursor()
                 if file_extension == 'pdf':
@@ -350,7 +367,9 @@ def delete_notice(notice_id):
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-# Public display route: show only notices that are not expired
+###########################################
+# PUBLIC DISPLAY: show only valid notices
+###########################################
 @app.route('/<dept>')
 def public_dept(dept):
     dept = dept.lower()
@@ -359,7 +378,7 @@ def public_dept(dept):
         c = conn.cursor()
         c.execute("""
             SELECT * FROM notices
-            WHERE department=%s 
+            WHERE department=%s
             AND (scheduled_time IS NULL OR scheduled_time <= NOW())
             AND expire_time > NOW()
             ORDER BY id DESC
@@ -380,7 +399,7 @@ def get_latest_notices(dept):
         c.execute("""
             SELECT id, department, filename, filetype, scheduled_time, expire_time
             FROM notices
-            WHERE department=%s 
+            WHERE department=%s
             AND (scheduled_time IS NULL OR scheduled_time <= NOW())
             AND expire_time > NOW()
             ORDER BY id DESC
@@ -395,7 +414,7 @@ def get_latest_notices(dept):
                 'filename': n[2],
                 'filetype': n[3],
                 'scheduled_time': n[4].strftime("%Y-%m-%d %H:%M:%S") if n[4] else None,
-                'expire_time': n[5].strftime("%Y-%m-%d %H:%M:%S")
+                'expire_time': n[5].strftime("%Y-%m-%d %H:%M:%S") if n[5] else None
             })
         return jsonify(results)
     else:
