@@ -22,6 +22,11 @@
          <option value="PM">PM</option>
       </select>
     </div>
+    <!-- Optional expiration duration input -->
+    <div class="form-group">
+      <label for="duration">Expiration Duration (in days, default is 30):</label>
+      <input type="number" name="duration" id="duration" placeholder="30">
+    </div>
     <input type="submit" value="Schedule Notice" class="btn">
   </form>
   <p><a href="{{ url_for('admin', dept=department) }}">Back to Admin Panel</a></p>

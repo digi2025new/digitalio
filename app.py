@@ -39,7 +39,8 @@ def init_db():
             department TEXT NOT NULL,
             filename TEXT NOT NULL,
             filetype TEXT NOT NULL,
-            scheduled_time TIMESTAMP NULL
+            scheduled_time TIMESTAMP NULL,
+            expire_time TIMESTAMP NOT NULL
         )
     ''')
     conn.commit()
@@ -142,6 +143,14 @@ def admin(dept):
                     file_extension = filename.rsplit('.', 1)[1].lower()
                     file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                     file.save(file_path)
+                    # Get duration from form (in days). Default to 30 if not provided.
+                    duration_str = request.form.get('duration')
+                    try:
+                        duration_days = int(duration_str) if duration_str and duration_str.strip() != "" else 30
+                    except:
+                        duration_days = 30
+                    # For immediate uploads, scheduled_time is None.
+                    expire_time = datetime.utcnow().replace(tzinfo=timezone.utc) + timedelta(days=duration_days)
                     conn = get_db_connection()
                     c = conn.cursor()
                     if file_extension == 'pdf':
@@ -153,9 +162,9 @@ def admin(dept):
                                 image_path = os.path.join(app.config['UPLOAD_FOLDER'], image_filename)
                                 page.save(image_path, 'JPEG')
                                 c.execute("""
-                                    INSERT INTO notices (department, filename, filetype, scheduled_time)
-                                    VALUES (%s, %s, %s, %s)
-                                """, (dept, image_filename, 'pdf_image', None))
+                                    INSERT INTO notices (department, filename, filetype, scheduled_time, expire_time)
+                                    VALUES (%s, %s, %s, %s, %s)
+                                """, (dept, image_filename, 'pdf_image', None, expire_time))
                             conn.commit()
                             flash('PDF converted and images uploaded successfully.')
                         except Exception as e:
@@ -167,26 +176,29 @@ def admin(dept):
                         return redirect(url_for('admin', dept=dept))
                     else:
                         c.execute("""
-                            INSERT INTO notices (department, filename, filetype, scheduled_time)
-                            VALUES (%s, %s, %s, %s)
-                        """, (dept, filename, file_extension, None))
+                            INSERT INTO notices (department, filename, filetype, scheduled_time, expire_time)
+                            VALUES (%s, %s, %s, %s, %s)
+                        """, (dept, filename, file_extension, None, expire_time))
                         conn.commit()
                         conn.close()
                         flash('File uploaded successfully.')
                         return redirect(url_for('admin', dept=dept))
             conn = get_db_connection()
             c = conn.cursor()
-            # Immediate notices: scheduled_time is NULL or <= NOW()
+            # Show only notices that are not expired.
             c.execute("""
                 SELECT * FROM notices 
-                WHERE department=%s AND (scheduled_time IS NULL OR scheduled_time <= NOW())
+                WHERE department=%s 
+                AND (scheduled_time IS NULL OR scheduled_time <= NOW())
+                AND expire_time > NOW()
                 ORDER BY id DESC
             """, (dept,))
             immediate_notices = c.fetchall()
-            # Prescheduled notices: scheduled_time > NOW()
             c.execute("""
                 SELECT * FROM notices 
-                WHERE department=%s AND scheduled_time > NOW()
+                WHERE department=%s 
+                AND scheduled_time > NOW()
+                AND expire_time > NOW()
                 ORDER BY id DESC
             """, (dept,))
             prescheduled_notices = c.fetchall()
@@ -244,6 +256,13 @@ def schedule_notice(dept):
                 except ValueError:
                     flash('Invalid date/time format. Please use the correct format (e.g., 02:30 PM).')
                     return redirect(request.url)
+                # Get duration (in days) from form; default to 30 if not provided.
+                duration_str = request.form.get('duration')
+                try:
+                    duration_days = int(duration_str) if duration_str and duration_str.strip() != "" else 30
+                except:
+                    duration_days = 30
+                expire_time = utc_dt + timedelta(days=duration_days)
                 filename = secure_filename(file.filename)
                 file_extension = filename.rsplit('.', 1)[1].lower()
                 file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -259,9 +278,9 @@ def schedule_notice(dept):
                             image_path = os.path.join(app.config['UPLOAD_FOLDER'], image_filename)
                             page.save(image_path, 'JPEG')
                             c.execute("""
-                                INSERT INTO notices (department, filename, filetype, scheduled_time)
-                                VALUES (%s, %s, %s, %s)
-                            """, (dept, image_filename, 'pdf_image', utc_dt))
+                                INSERT INTO notices (department, filename, filetype, scheduled_time, expire_time)
+                                VALUES (%s, %s, %s, %s, %s)
+                            """, (dept, image_filename, 'pdf_image', utc_dt, expire_time))
                         conn.commit()
                         flash('PDF converted and images scheduled successfully.')
                     except Exception as e:
@@ -273,9 +292,9 @@ def schedule_notice(dept):
                     return redirect(url_for('admin', dept=dept))
                 else:
                     c.execute("""
-                        INSERT INTO notices (department, filename, filetype, scheduled_time)
-                        VALUES (%s, %s, %s, %s)
-                    """, (dept, filename, file_extension, utc_dt))
+                        INSERT INTO notices (department, filename, filetype, scheduled_time, expire_time)
+                        VALUES (%s, %s, %s, %s, %s)
+                    """, (dept, filename, file_extension, utc_dt, expire_time))
                     conn.commit()
                     conn.close()
                     flash('Notice scheduled successfully.')
@@ -316,7 +335,7 @@ def delete_notice(notice_id):
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-# Public display route: show only immediate notices (scheduled_time is NULL or <= NOW())
+# Public display route: show only notices that are not expired
 @app.route('/<dept>')
 def public_dept(dept):
     dept = dept.lower()
@@ -325,12 +344,13 @@ def public_dept(dept):
         c = conn.cursor()
         c.execute("""
             SELECT * FROM notices
-            WHERE department=%s AND (scheduled_time IS NULL OR scheduled_time <= NOW())
+            WHERE department=%s 
+            AND (scheduled_time IS NULL OR scheduled_time <= NOW())
+            AND expire_time > NOW()
             ORDER BY id DESC
         """, (dept,))
         notices = c.fetchall()
         conn.close()
-        # Pass hide_nav=True so that no nav buttons (Home, Dashboard, Logout, etc.) appear
         return render_template('slideshow.html', department=dept, notices=notices, hide_nav=True)
     else:
         flash('Department not found.')
@@ -343,9 +363,11 @@ def get_latest_notices(dept):
         conn = get_db_connection()
         c = conn.cursor()
         c.execute("""
-            SELECT id, department, filename, filetype, scheduled_time
+            SELECT id, department, filename, filetype, scheduled_time, expire_time
             FROM notices
-            WHERE department=%s AND (scheduled_time IS NULL OR scheduled_time <= NOW())
+            WHERE department=%s 
+            AND (scheduled_time IS NULL OR scheduled_time <= NOW())
+            AND expire_time > NOW()
             ORDER BY id DESC
         """, (dept,))
         notices = c.fetchall()
@@ -357,7 +379,8 @@ def get_latest_notices(dept):
                 'department': n[1],
                 'filename': n[2],
                 'filetype': n[3],
-                'scheduled_time': n[4].strftime("%Y-%m-%d %H:%M:%S") if n[4] else None
+                'scheduled_time': n[4].strftime("%Y-%m-%d %H:%M:%S") if n[4] else None,
+                'expire_time': n[5].strftime("%Y-%m-%d %H:%M:%S")
             })
         return jsonify(results)
     else:
