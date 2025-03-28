@@ -10,18 +10,15 @@
 body {
   font-family: Arial, sans-serif;
   background-color: #fff;
-  margin: 0;
-  padding: 0;
+  line-height: 1.6;
 }
 
-/* Container for general page content */
 .container {
-  width: 100%;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 0;
+  padding: 0 15px;
 }
 
-/* Flash messages */
 .flashes {
   list-style: none;
   padding: 10px;
@@ -30,7 +27,7 @@ body {
 }
 
 /* ---------------------------------------
- 2. HEADER
+ 2. HEADER & NAVIGATION
 ---------------------------------------- */
 header {
   background-color: #333;
@@ -40,11 +37,12 @@ header {
 }
 
 .header-container {
-  width: 90%;
+  max-width: 1200px;
   margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 0 15px;
 }
 
 .header-container h1 {
@@ -144,7 +142,7 @@ header {
 }
 
 /* ---------------------------------------
- 5. FORMS (Login, Sign Up, Admin Login)
+ 5. FORMS (Login, Sign Up, etc.)
 ---------------------------------------- */
 .form-container {
   background: #fff;
@@ -172,7 +170,8 @@ header {
 
 .form-group input[type="text"],
 .form-group input[type="password"],
-.form-group input[type="number"] {
+.form-group input[type="number"],
+.form-group input[type="date"] {
   width: 100%;
   padding: 10px;
   border: 1px solid #ccc;
@@ -180,7 +179,7 @@ header {
 }
 
 /* ---------------------------------------
- 6. DASHBOARD & DEPARTMENTS
+ 6. DASHBOARD, DEPARTMENTS & ADMIN PANEL
 ---------------------------------------- */
 .dashboard {
   text-align: center;
@@ -202,11 +201,8 @@ header {
   background-color: #555;
 }
 
-/* ---------------------------------------
- 7. ADMIN PANEL & NOTICES
----------------------------------------- */
 .admin-panel {
-  max-width: 900px;
+  max-width: 1200px;
   margin: 40px auto;
   padding: 20px;
   background: #fff;
@@ -214,18 +210,19 @@ header {
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-.upload-section,
+/* ---------------------------------------
+ 7. NOTICES GRID & CARD STYLING (Public Display)
+---------------------------------------- */
 .notices-section {
   margin-bottom: 30px;
 }
 
-.upload-section h3,
 .notices-section h3 {
   margin-bottom: 15px;
   text-align: center;
 }
 
-/* Grid layout for notices */
+/* Flexbox grid for notices – this is mainly for public display pages */
 .notices-grid {
   display: flex;
   flex-wrap: wrap;
@@ -233,12 +230,12 @@ header {
   justify-content: center;
 }
 
-/* Notice card styling with interactive hover */
 .notice-card {
+  flex: 1 1 300px;
+  max-width: 300px;
   background: #f9f9f9;
   border: 1px solid #ddd;
   border-radius: 4px;
-  width: calc(33.333% - 20px);
   padding: 10px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s, box-shadow 0.3s;
@@ -252,7 +249,8 @@ header {
 .notice-card img,
 .notice-card video,
 .notice-card audio {
-  max-width: 100%;
+  width: 100%;
+  height: auto;
   border-radius: 4px;
   margin-bottom: 10px;
 }
@@ -261,7 +259,9 @@ header {
   text-align: center;
 }
 
-/* Navigation links for admin panel */
+/* ---------------------------------------
+ 8. ADMIN NAVIGATION LINKS
+---------------------------------------- */
 .admin-nav {
   text-align: center;
   margin-top: 20px;
@@ -277,51 +277,8 @@ header {
   text-decoration: underline;
 }
 
-/* Modal styling for deletion confirmation */
-.modal {
-  display: none;
-  position: fixed;
-  z-index: 100;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  background-color: rgba(0,0,0,0.4);
-  animation: fadeIn 0.3s;
-}
-
-@keyframes fadeIn {
-  from {opacity: 0;}
-  to {opacity: 1;}
-}
-
-.modal-content {
-  background-color: #fefefe;
-  margin: 15% auto;
-  padding: 20px;
-  border: 1px solid #888;
-  width: 80%;
-  max-width: 400px;
-  text-align: center;
-  border-radius: 8px;
-}
-
-.close {
-  color: #aaa;
-  float: right;
-  font-size: 28px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.close:hover,
-.close:focus {
-  color: black;
-}
-
 /* ---------------------------------------
- 8. SLIDESHOW
+ 9. SLIDESHOW (Public Display)
 ---------------------------------------- */
 .slideshow-container {
   width: 100%;
@@ -356,474 +313,18 @@ header {
 }
 
 /* ---------------------------------------
- 9. RESPONSIVE DESIGN
+ 10. RESPONSIVE DESIGN FOR PUBLIC DISPLAY
 ---------------------------------------- */
 @media (max-width: 768px) {
   .notice-card {
-    width: calc(50% - 20px);
+    flex: 1 1 45%;
+    max-width: 45%;
   }
 }
 
 @media (max-width: 480px) {
   .notice-card {
-    width: 100%;
+    flex: 1 1 100%;
+    max-width: 100%;
   }
-}
-
-/* ---------------------------------------
-10. PUBLIC DISPLAY & SLIDESHOW NOTICES
----------------------------------------- */
-#notices-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 20px;
-  padding: 20px;
-}
-
-.notice {
-  background: #f9f9f9;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 10px;
-  max-width: 300px;
-  width: 100%;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  text-align: center;
-}
-
-.notice img,
-.notice video,
-.notice audio {
-  max-width: 100%;
-  height: auto;
-  border-radius: 4px;
-  display: block;
-  margin: 0 auto;
-}
-
-/* ---------------------------------------
-Responsive Media for Slideshow
----------------------------------------- */
-.responsive-media {
-  max-width: 100%;
-  max-height: 100vh;
-  width: auto;
-  height: auto;
-}
-/* ---------------------------------------
-   1. RESET & GLOBAL STYLES
----------------------------------------- */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: Arial, sans-serif;
-  background-color: #fff;
-  margin: 0;
-  padding: 0;
-}
-
-/* Container for general page content */
-.container {
-  width: 100%;
-  margin: 0 auto;
-  padding: 0;
-}
-
-/* Flash messages */
-.flashes {
-  list-style: none;
-  padding: 10px;
-  margin: 0;
-  color: #c00;
-}
-
-/* ---------------------------------------
- 2. HEADER
----------------------------------------- */
-header {
-  background-color: #333;
-  color: #fff;
-  padding: 20px 0;
-  text-align: center;
-}
-
-.header-container {
-  width: 90%;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.header-container h1 {
-  font-size: 1.8rem;
-}
-
-.header-container nav ul {
-  list-style: none;
-  display: flex;
-  gap: 15px;
-}
-
-.header-container nav ul li a {
-  color: #fff;
-  text-decoration: none;
-}
-
-/* ---------------------------------------
- 3. HERO SECTION (Home Page)
----------------------------------------- */
-.hero {
-  background: url("https://via.placeholder.com/1200x400") no-repeat center center/cover;
-  width: 100%;
-  padding: 100px 0;
-  color: #fff;
-  text-align: center;
-  position: relative;
-}
-
-.hero::after {
-  content: "";
-  position: absolute;
-  top: 0; 
-  left: 0; 
-  right: 0; 
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-}
-
-.hero-content {
-  position: relative;
-  z-index: 1;
-  max-width: 700px;
-  margin: 0 auto;
-  padding: 0 20px;
-}
-
-.hero-content h1 {
-  font-size: 3rem;
-  margin-bottom: 20px;
-}
-
-.hero-content p {
-  font-size: 1.2rem;
-  margin-bottom: 30px;
-}
-
-.hero-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-}
-
-/* ---------------------------------------
- 4. BUTTONS
----------------------------------------- */
-.btn {
-  display: inline-block;
-  padding: 10px 20px;
-  background-color: #007BFF;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  text-decoration: none;
-  transition: background-color 0.3s ease;
-  margin-top: 10px;
-  font-size: 1rem;
-  text-align: center;
-}
-
-.btn:hover {
-  background-color: #0056b3;
-}
-
-.btn-secondary {
-  background-color: #28a745;
-}
-
-.btn-secondary:hover {
-  background-color: #1e7e34;
-}
-
-.btn-danger {
-  background-color: #dc3545;
-}
-
-.btn-danger:hover {
-  background-color: #c82333;
-}
-
-/* ---------------------------------------
- 5. FORMS (Login, Sign Up, Admin Login)
----------------------------------------- */
-.form-container {
-  background: #fff;
-  border-radius: 8px;
-  max-width: 400px;
-  margin: 40px auto;
-  padding: 30px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-.form-container h2 {
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.form-group {
-  margin-bottom: 15px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-}
-
-.form-group input[type="text"],
-.form-group input[type="password"],
-.form-group input[type="number"] {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-/* ---------------------------------------
- 6. DASHBOARD & DEPARTMENTS
----------------------------------------- */
-.dashboard {
-  text-align: center;
-  padding: 20px;
-}
-
-.departments button {
-  margin: 10px;
-  transition: transform 0.3s;
-  background-color: #333;
-  color: #fff;
-  padding: 10px 20px;
-  border: none;
-  cursor: pointer;
-}
-
-.departments button:hover {
-  transform: scale(1.1);
-  background-color: #555;
-}
-
-/* ---------------------------------------
- 7. ADMIN PANEL & NOTICES
----------------------------------------- */
-.admin-panel {
-  max-width: 900px;
-  margin: 40px auto;
-  padding: 20px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-.upload-section,
-.notices-section {
-  margin-bottom: 30px;
-}
-
-.upload-section h3,
-.notices-section h3 {
-  margin-bottom: 15px;
-  text-align: center;
-}
-
-/* Grid layout for notices */
-.notices-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  justify-content: center;
-}
-
-/* Notice card styling with interactive hover */
-.notice-card {
-  background: #f9f9f9;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  width: calc(33.333% - 20px);
-  padding: 10px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s, box-shadow 0.3s;
-}
-
-.notice-card:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.notice-card img,
-.notice-card video,
-.notice-card audio {
-  max-width: 100%;
-  border-radius: 4px;
-  margin-bottom: 10px;
-}
-
-.notice-actions {
-  text-align: center;
-}
-
-/* Navigation links for admin panel */
-.admin-nav {
-  text-align: center;
-  margin-top: 20px;
-}
-
-.admin-nav p a {
-  color: #007BFF;
-  text-decoration: none;
-  font-weight: bold;
-}
-
-.admin-nav p a:hover {
-  text-decoration: underline;
-}
-
-/* Modal styling for deletion confirmation */
-.modal {
-  display: none;
-  position: fixed;
-  z-index: 100;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  background-color: rgba(0,0,0,0.4);
-  animation: fadeIn 0.3s;
-}
-
-@keyframes fadeIn {
-  from {opacity: 0;}
-  to {opacity: 1;}
-}
-
-.modal-content {
-  background-color: #fefefe;
-  margin: 15% auto;
-  padding: 20px;
-  border: 1px solid #888;
-  width: 80%;
-  max-width: 400px;
-  text-align: center;
-  border-radius: 8px;
-}
-
-.close {
-  color: #aaa;
-  float: right;
-  font-size: 28px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.close:hover,
-.close:focus {
-  color: black;
-}
-
-/* ---------------------------------------
- 8. SLIDESHOW
----------------------------------------- */
-.slideshow-container {
-  width: 100%;
-  margin: 0 auto;
-  padding: 20px;
-  text-align: center;
-  background: #fff;
-}
-
-.slideshow {
-  position: relative;
-  width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
-  overflow: hidden;
-}
-
-.slide {
-  width: 100%;
-  display: none;
-  text-align: center;
-}
-
-.slide img,
-.slide video,
-.slide audio {
-  width: 100%;
-  height: auto;
-  display: block;
-  margin: 0 auto;
-  border-radius: 8px;
-}
-
-/* ---------------------------------------
- 9. RESPONSIVE DESIGN
----------------------------------------- */
-@media (max-width: 768px) {
-  .notice-card {
-    width: calc(50% - 20px);
-  }
-}
-
-@media (max-width: 480px) {
-  .notice-card {
-    width: 100%;
-  }
-}
-
-/* ---------------------------------------
-10. PUBLIC DISPLAY & SLIDESHOW NOTICES
----------------------------------------- */
-#notices-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 20px;
-  padding: 20px;
-}
-
-.notice {
-  background: #f9f9f9;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 10px;
-  max-width: 300px;
-  width: 100%;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  text-align: center;
-}
-
-.notice img,
-.notice video,
-.notice audio {
-  max-width: 100%;
-  height: auto;
-  border-radius: 4px;
-  display: block;
-  margin: 0 auto;
-}
-
-/* ---------------------------------------
-Responsive Media for Slideshow
----------------------------------------- */
-.responsive-media {
-  max-width: 100%;
-  max-height: 100vh;
-  width: auto;
-  height: auto;
 }
