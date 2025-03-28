@@ -7,11 +7,11 @@
       <div class="slide" style="display: none;">
         {% set file_url = url_for('uploaded_file', filename=notice[2]) %}
         {% if notice[3] in ['png', 'jpg', 'jpeg', 'gif', 'pdf_image'] %}
-          <img src="{{ file_url }}" alt="Notice Image" class="responsive-media">
+          <img src="{{ file_url }}" alt="Notice Image">
         {% elif notice[3] == 'mp4' %}
-          <video src="{{ file_url }}" autoplay muted playsinline class="responsive-media"></video>
+          <video src="{{ file_url }}" autoplay muted playsinline></video>
         {% elif notice[3] == 'mp3' %}
-          <audio src="{{ file_url }}" autoplay controls class="responsive-media"></audio>
+          <audio src="{{ file_url }}" autoplay controls></audio>
         {% else %}
           <a href="{{ file_url }}" target="_blank" download>View Document</a>
         {% endif %}
@@ -58,15 +58,28 @@ document.addEventListener('DOMContentLoaded', function() {
         data.forEach(notice => {
           const fileUrl = "{{ url_for('uploaded_file', filename='') }}" + notice.filename;
           if (['png', 'jpg', 'jpeg', 'gif', 'pdf_image'].includes(notice.filetype)) {
-            newHTML += `<div class="slide" style="display: none;"><img src="${fileUrl}" alt="Notice Image" class="responsive-media"></div>`;
+            newHTML += `
+              <div class="slide" style="display: none;">
+                <img src="${fileUrl}" alt="Notice Image">
+              </div>`;
           } else if (notice.filetype === 'mp4') {
-            newHTML += `<div class="slide" style="display: none;"><video src="${fileUrl}" autoplay muted playsinline class="responsive-media"></video></div>`;
+            newHTML += `
+              <div class="slide" style="display: none;">
+                <video src="${fileUrl}" autoplay muted playsinline></video>
+              </div>`;
           } else if (notice.filetype === 'mp3') {
-            newHTML += `<div class="slide" style="display: none;"><audio src="${fileUrl}" autoplay controls class="responsive-media"></audio></div>`;
+            newHTML += `
+              <div class="slide" style="display: none;">
+                <audio src="${fileUrl}" autoplay controls></audio>
+              </div>`;
           } else {
-            newHTML += `<div class="slide" style="display: none;"><a href="${fileUrl}" target="_blank" download>View Document</a></div>`;
+            newHTML += `
+              <div class="slide" style="display: none;">
+                <a href="${fileUrl}" target="_blank" download>View Document</a>
+              </div>`;
           }
         });
+
         if(newHTML !== currentContent) {
           currentContent = newHTML;
           clearTimeout(slideInterval);
