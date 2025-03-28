@@ -330,7 +330,7 @@ def public_dept(dept):
         """, (dept,))
         notices = c.fetchall()
         conn.close()
-        return render_template('slideshow.html', department=dept, notices=notices)
+        return render_template('slideshow.html', department=dept, notices=notices, hide_nav=True)
     else:
         flash('Department not found.')
         return redirect(url_for('index'))

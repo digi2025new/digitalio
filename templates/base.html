@@ -13,13 +13,17 @@
       <h1>Digital Notice Board</h1>
       <nav>
         <ul>
-          {% if session.username %}
-            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-            <li><a href="{{ url_for('logout') }}">Logout</a></li>
-          {% else %}
+          {% if hide_nav %}
             <li><a href="{{ url_for('index') }}">Home</a></li>
-            <li><a href="{{ url_for('login') }}">Login</a></li>
-            <li><a href="{{ url_for('signup') }}">Sign Up</a></li>
+          {% else %}
+            {% if session.username %}
+              <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+              <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            {% else %}
+              <li><a href="{{ url_for('index') }}">Home</a></li>
+              <li><a href="{{ url_for('login') }}">Login</a></li>
+              <li><a href="{{ url_for('signup') }}">Sign Up</a></li>
+            {% endif %}
           {% endif %}
         </ul>
       </nav>
