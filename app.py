@@ -9,6 +9,9 @@ app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'your_fallback_secret_key')
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 
+# Set maximum upload size to 10GB
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024 * 1024  # 10 GB
+
 UPLOAD_FOLDER = 'uploads/'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mp3', 'pdf', 'docx', 'xlsx'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
