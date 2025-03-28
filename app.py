@@ -330,6 +330,7 @@ def public_dept(dept):
         """, (dept,))
         notices = c.fetchall()
         conn.close()
+        # Pass hide_nav=True so that no nav buttons (Home, Dashboard, Logout, etc.) appear
         return render_template('slideshow.html', department=dept, notices=notices, hide_nav=True)
     else:
         flash('Department not found.')

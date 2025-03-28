@@ -14,7 +14,7 @@
       <nav>
         <ul>
           {% if hide_nav %}
-            <li><a href="{{ url_for('index') }}">Home</a></li>
+            <!-- Navigation hidden on public display pages -->
           {% else %}
             {% if session.username %}
               <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
