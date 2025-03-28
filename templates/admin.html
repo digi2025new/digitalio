@@ -67,7 +67,7 @@
         {% elif notice[3] == 'mp3' %}
           <audio src="{{ file_url }}" controls></audio>
         {% else %}
-          <a href="{{ file_url }}" target="_blank">View Document</a>
+          <a href="{{ url_for('uploaded_file', filename=notice[2]) }}" target="_blank">View Document</a>
         {% endif %}
         <div class="notice-actions">
           {% if notice[0] is not none %}

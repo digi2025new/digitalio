@@ -26,6 +26,7 @@ def get_db_connection():
 def init_db():
     conn = get_db_connection()
     c = conn.cursor()
+    # Create users table if not exists
     c.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
@@ -33,6 +34,7 @@ def init_db():
             password TEXT NOT NULL
         )
     ''')
+    # Create notices table with expire_time column (it might already exist without expire_time)
     c.execute('''
         CREATE TABLE IF NOT EXISTS notices (
             id SERIAL PRIMARY KEY,
@@ -40,9 +42,11 @@ def init_db():
             filename TEXT NOT NULL,
             filetype TEXT NOT NULL,
             scheduled_time TIMESTAMP NULL,
-            expire_time TIMESTAMP NOT NULL
+            expire_time TIMESTAMP
         )
     ''')
+    # Add expire_time column if it doesn't exist and set a default value (30 days from NOW)
+    c.execute("ALTER TABLE notices ADD COLUMN IF NOT EXISTS expire_time TIMESTAMP NOT NULL DEFAULT (NOW() + INTERVAL '30 days')")
     conn.commit()
     conn.close()
 
@@ -143,7 +147,7 @@ def admin(dept):
                     file_extension = filename.rsplit('.', 1)[1].lower()
                     file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                     file.save(file_path)
-                    # Get duration from form (in days). Default to 30 if not provided.
+                    # Get optional duration (in days) from form; default to 30 days if blank.
                     duration_str = request.form.get('duration')
                     try:
                         duration_days = int(duration_str) if duration_str and duration_str.strip() != "" else 30
@@ -185,7 +189,7 @@ def admin(dept):
                         return redirect(url_for('admin', dept=dept))
             conn = get_db_connection()
             c = conn.cursor()
-            # Show only notices that are not expired.
+            # Only show notices that are not expired.
             c.execute("""
                 SELECT * FROM notices 
                 WHERE department=%s 
@@ -256,7 +260,7 @@ def schedule_notice(dept):
                 except ValueError:
                     flash('Invalid date/time format. Please use the correct format (e.g., 02:30 PM).')
                     return redirect(request.url)
-                # Get duration (in days) from form; default to 30 if not provided.
+                # Get optional duration (in days); default to 30 if not provided.
                 duration_str = request.form.get('duration')
                 try:
                     duration_days = int(duration_str) if duration_str and duration_str.strip() != "" else 30
