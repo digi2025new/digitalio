@@ -34,7 +34,7 @@ def init_db():
             password TEXT NOT NULL
         )
     ''')
-    # Create notices table with expire_time column (it might already exist without expire_time)
+    # Create notices table (if not exists) with expire_time column
     c.execute('''
         CREATE TABLE IF NOT EXISTS notices (
             id SERIAL PRIMARY KEY,
@@ -45,7 +45,7 @@ def init_db():
             expire_time TIMESTAMP
         )
     ''')
-    # Add expire_time column if it doesn't exist and set a default value (30 days from NOW)
+    # Ensure expire_time column exists with default value (30 days from NOW)
     c.execute("ALTER TABLE notices ADD COLUMN IF NOT EXISTS expire_time TIMESTAMP NOT NULL DEFAULT (NOW() + INTERVAL '30 days')")
     conn.commit()
     conn.close()
@@ -147,14 +147,19 @@ def admin(dept):
                     file_extension = filename.rsplit('.', 1)[1].lower()
                     file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                     file.save(file_path)
-                    # Get optional duration (in days) from form; default to 30 days if blank.
-                    duration_str = request.form.get('duration')
-                    try:
-                        duration_days = int(duration_str) if duration_str and duration_str.strip() != "" else 30
-                    except:
-                        duration_days = 30
-                    # For immediate uploads, scheduled_time is None.
-                    expire_time = datetime.utcnow().replace(tzinfo=timezone.utc) + timedelta(days=duration_days)
+                    # Get optional expiration date (in IST). If provided, parse it; else default to 30 days from now.
+                    expire_date_str = request.form.get('expire_date')
+                    ist = timezone(timedelta(hours=5, minutes=30))
+                    if expire_date_str and expire_date_str.strip() != "":
+                        try:
+                            expire_dt = datetime.strptime(expire_date_str, "%Y-%m-%d")
+                            expire_dt = expire_dt.replace(hour=23, minute=59, second=59, tzinfo=ist)
+                            expire_time = expire_dt.astimezone(timezone.utc)
+                        except Exception as e:
+                            flash("Invalid expiration date format.")
+                            return redirect(request.url)
+                    else:
+                        expire_time = datetime.utcnow().replace(tzinfo=timezone.utc) + timedelta(days=30)
                     conn = get_db_connection()
                     c = conn.cursor()
                     if file_extension == 'pdf':
@@ -260,13 +265,19 @@ def schedule_notice(dept):
                 except ValueError:
                     flash('Invalid date/time format. Please use the correct format (e.g., 02:30 PM).')
                     return redirect(request.url)
-                # Get optional duration (in days); default to 30 if not provided.
-                duration_str = request.form.get('duration')
-                try:
-                    duration_days = int(duration_str) if duration_str and duration_str.strip() != "" else 30
-                except:
-                    duration_days = 30
-                expire_time = utc_dt + timedelta(days=duration_days)
+                # Get optional expiration date; if not provided, default to scheduled_time + 30 days.
+                expire_date_str = request.form.get('expire_date')
+                ist = timezone(timedelta(hours=5, minutes=30))
+                if expire_date_str and expire_date_str.strip() != "":
+                    try:
+                        expire_dt = datetime.strptime(expire_date_str, "%Y-%m-%d")
+                        expire_dt = expire_dt.replace(hour=23, minute=59, second=59, tzinfo=ist)
+                        expire_time = expire_dt.astimezone(timezone.utc)
+                    except Exception as e:
+                        flash("Invalid expiration date format.")
+                        return redirect(request.url)
+                else:
+                    expire_time = utc_dt + timedelta(days=30)
                 filename = secure_filename(file.filename)
                 file_extension = filename.rsplit('.', 1)[1].lower()
                 file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
