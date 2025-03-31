@@ -20,19 +20,22 @@ body {
 .header-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 10px 5px;
 }
 
 .header-container h1 {
   color: #00FFFF; /* Neon turquoise */
+  font-size: 1.8rem;
+  margin-bottom: 5px;
 }
 
 .nav-list {
   list-style: none;
   padding: 0;
-  margin: 10px 0;
+  margin: 0;
   display: inline-flex;
-  gap: 20px;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .nav-btn {
@@ -52,15 +55,16 @@ body {
 ---------------------------------------- */
 .main-container {
   max-width: 800px;
-  margin: 20px auto;
-  padding: 20px;
+  margin: 10px auto;
+  padding: 10px;
 }
 
 .footer {
-  margin-top: 40px;
-  padding: 20px 0;
+  margin-top: 20px;
+  padding: 10px 0;
   background: #0B2C4D;
   color: #00FFFF;
+  font-size: 0.9rem;
 }
 
 /* ---------------------------------------
@@ -68,73 +72,80 @@ body {
 ---------------------------------------- */
 .flashes {
   list-style: none;
-  padding: 10px;
-  margin: 10px auto;
+  padding: 5px;
+  margin: 5px auto;
   max-width: 400px;
   text-align: center;
 }
 
 .flashes li {
-  margin-bottom: 10px;
+  margin-bottom: 5px;
   color: #dc3545;
 }
 
 /* ---------------------------------------
-   5. NEON LOGIN / FORM STYLES
+   5. NEON LOGIN/FORM CONTAINERS
 ---------------------------------------- */
 .login-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh; /* Full viewport height */
+  min-height: 80vh;
+  padding: 10px;
   background: #0A192F;
 }
 
 .login-box {
-  background: #0B2C4D;      /* Dark container background */
-  width: 350px;
-  padding: 40px;
+  background: #0B2C4D;
+  width: 100%;
+  max-width: 350px;
+  padding: 20px;
   border-radius: 8px;
   border: 1px solid rgba(0, 255, 255, 0.2);
-  box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.1);
   animation: neon-border-flicker 2s infinite;
 }
 
 @keyframes neon-border-flicker {
   0%, 100% {
-    box-shadow: 0 0 5px rgba(0, 255, 255, 0.6), 0 0 10px rgba(0, 255, 255, 0.6);
+    box-shadow: 0 0 5px rgba(0,255,255,0.6), 0 0 10px rgba(0,255,255,0.6);
   }
   50% {
-    box-shadow: 0 0 5px rgba(0, 255, 255, 0.2), 0 0 10px rgba(0, 255, 255, 0.2);
+    box-shadow: 0 0 5px rgba(0,255,255,0.2), 0 0 10px rgba(0,255,255,0.2);
   }
 }
 
 .login-box h2 {
-  margin-bottom: 30px;
-  color: #00FFFF; /* Neon turquoise */
-  text-align: center;
+  margin-bottom: 15px;
+  color: #00FFFF;
+  font-size: 1.5rem;
 }
 
+/* ---------------------------------------
+   6. FORM ELEMENTS
+---------------------------------------- */
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   text-align: left;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 5px;
+  margin-bottom: 3px;
   font-weight: bold;
   color: #fff;
+  font-size: 0.9rem;
 }
 
 .form-group input,
 .form-group select {
   width: 100%;
-  padding: 10px;
+  padding: 8px;
   border: 1px solid #00FFFF;
   border-radius: 4px;
-  background: #072238; /* Slightly darker input background */
+  background: #072238;
   color: #fff;
+  font-size: 0.9rem;
   transition: box-shadow 0.3s ease;
 }
 
@@ -145,12 +156,12 @@ body {
 }
 
 /* ---------------------------------------
-   6. BUTTONS & LINKS
+   7. BUTTONS & LINKS
 ---------------------------------------- */
 .btn {
   display: block;
   width: 100%;
-  padding: 10px 20px;
+  padding: 10px;
   background-color: #00FFFF;
   color: #0B2C4D;
   border: none;
@@ -168,17 +179,51 @@ body {
 }
 
 .forgot-signup {
-  margin-top: 15px;
+  margin-top: 10px;
   text-align: center;
+  font-size: 0.9rem;
 }
 
 .forgot-signup a {
   color: #00FFFF;
   text-decoration: none;
-  font-size: 0.9rem;
   transition: color 0.3s ease;
 }
 
 .forgot-signup a:hover {
   color: #00CED1;
+}
+
+/* ---------------------------------------
+   8. RESPONSIVE DESIGN
+---------------------------------------- */
+@media (max-width: 600px) {
+  .header-container h1 {
+    font-size: 1.5rem;
+  }
+  
+  .nav-list {
+    gap: 5px;
+    font-size: 0.9rem;
+  }
+  
+  .main-container {
+    padding: 5px;
+  }
+  
+  .login-box {
+    padding: 15px;
+    max-width: 300px;
+  }
+  
+  .form-group input,
+  .form-group select {
+    padding: 6px;
+    font-size: 0.8rem;
+  }
+  
+  .btn {
+    padding: 8px;
+    font-size: 0.9rem;
+  }
 }
