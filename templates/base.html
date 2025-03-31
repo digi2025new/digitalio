@@ -4,35 +4,31 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Digital Notice Board</title>
-  <!-- Link to the updated responsive neon-themed CSS -->
+  <!-- Link to your CSS and JavaScript files -->
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-  <!-- Optional: Include your JavaScript file if needed -->
   <script src="{{ url_for('static', filename='script.js') }}"></script>
 </head>
 <body>
   <header>
     <div class="header-container">
       <h1>Digital Notice Board</h1>
+      {% if not hide_nav %}
       <nav>
         <ul class="nav-list">
-          {% if hide_nav %}
-            <!-- Navigation hidden on public display pages -->
+          {% if session.username %}
+            <li><a href="{{ url_for('dashboard') }}" class="nav-btn">Dashboard</a></li>
+            <li><a href="{{ url_for('logout') }}" class="nav-btn">Logout</a></li>
           {% else %}
-            {% if session.username %}
-              <li><a href="{{ url_for('dashboard') }}" class="nav-btn">Dashboard</a></li>
-              <li><a href="{{ url_for('logout') }}" class="nav-btn">Logout</a></li>
-            {% else %}
-              <li><a href="{{ url_for('index') }}" class="nav-btn">Home</a></li>
-              <li><a href="{{ url_for('login') }}" class="nav-btn">Login</a></li>
-              <li><a href="{{ url_for('signup') }}" class="nav-btn">Sign Up</a></li>
-            {% endif %}
+            <li><a href="{{ url_for('index') }}" class="nav-btn">Home</a></li>
+            <li><a href="{{ url_for('login') }}" class="nav-btn">Login</a></li>
+            <li><a href="{{ url_for('signup') }}" class="nav-btn">Sign Up</a></li>
           {% endif %}
         </ul>
       </nav>
+      {% endif %}
     </div>
   </header>
 
-  <!-- Main container to center all page content -->
   <main class="main-container">
     {% with messages = get_flashed_messages() %}
       {% if messages %}
