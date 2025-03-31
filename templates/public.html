@@ -1,17 +1,19 @@
 {% extends "base.html" %}
+{% set hide_nav = true %}
+{% set show_home = false %}
 {% block content %}
-<div class="public-page">
-  <h2>{{ department | upper }} Notices</h2>
-  <div id="notices-container">
+<div class="public-page" style="padding: 10px;">
+  <h2 style="text-align: center;">{{ department | upper }} Notices</h2>
+  <div id="notices-container" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
     {% for notice in notices %}
-      <div class="notice">
+      <div class="notice" style="flex: 1 1 300px; max-width: 300px; box-sizing: border-box; margin: 10px;">
         {% set file_url = url_for('uploaded_file', filename=notice[2]) %}
         {% if notice[3] in ['png', 'jpg', 'jpeg', 'gif', 'pdf_image'] %}
-          <img src="{{ file_url }}" alt="Notice Image">
+          <img src="{{ file_url }}" alt="Notice Image" style="width: 100%; height: auto;">
         {% elif notice[3] == 'mp4' %}
-          <video src="{{ file_url }}" controls></video>
+          <video src="{{ file_url }}" controls style="width: 100%; height: auto;"></video>
         {% elif notice[3] == 'mp3' %}
-          <audio src="{{ file_url }}" controls></audio>
+          <audio src="{{ file_url }}" controls style="width: 100%; height: auto;"></audio>
         {% else %}
           <a href="{{ file_url }}" target="_blank">View Document</a>
         {% endif %}
@@ -30,13 +32,17 @@ function fetchLatestNotices() {
       data.forEach(notice => {
         let noticeDiv = document.createElement('div');
         noticeDiv.className = "notice";
+        noticeDiv.style.flex = "1 1 300px";
+        noticeDiv.style.maxWidth = "300px";
+        noticeDiv.style.boxSizing = "border-box";
+        noticeDiv.style.margin = "10px";
         let fileUrl = "{{ url_for('uploaded_file', filename='') }}" + notice.filename;
         if (['png', 'jpg', 'jpeg', 'gif', 'pdf_image'].includes(notice.filetype)) {
-          noticeDiv.innerHTML = `<img src="${fileUrl}" alt="Notice Image">`;
+          noticeDiv.innerHTML = `<img src="${fileUrl}" alt="Notice Image" style="width: 100%; height: auto;">`;
         } else if (notice.filetype === 'mp4') {
-          noticeDiv.innerHTML = `<video src="${fileUrl}" controls></video>`;
+          noticeDiv.innerHTML = `<video src="${fileUrl}" controls style="width: 100%; height: auto;"></video>`;
         } else if (notice.filetype === 'mp3') {
-          noticeDiv.innerHTML = `<audio src="${fileUrl}" controls></audio>`;
+          noticeDiv.innerHTML = `<audio src="${fileUrl}" controls style="width: 100%; height: auto;"></audio>`;
         } else {
           noticeDiv.innerHTML = `<a href="${fileUrl}" target="_blank">View Document</a>`;
         }
