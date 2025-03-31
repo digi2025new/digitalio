@@ -2,9 +2,25 @@
 {% block content %}
 <div class="public-page" style="padding: 10px; width: 100%;">
   <h2 style="text-align: center;">{{ department | upper }} Notices</h2>
-  <div id="notices-container" style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; width: 100%;">
+  <div id="notices-container" style="
+      display: flex; 
+      flex-wrap: wrap; 
+      justify-content: center; 
+      align-items: flex-start; 
+      gap: 10px; 
+      width: 100%; 
+      max-width: 100vw; 
+      max-height: calc(100vh - 150px);
+      overflow-y: auto;
+      overflow-x: hidden;
+    ">
     {% for notice in notices %}
-      <div class="notice" style="flex: 1 1 300px; max-width: 300px; box-sizing: border-box; margin: 10px;">
+      <div class="notice" style="
+          flex: 1 1 300px; 
+          max-width: 300px; 
+          box-sizing: border-box; 
+          margin: 10px;
+        ">
         {% set file_url = url_for('uploaded_file', filename=notice[2]) %}
         {% if notice[3] in ['png', 'jpg', 'jpeg', 'gif', 'pdf_image'] %}
           <img src="{{ file_url }}" alt="Notice Image" style="width: 100%; height: auto;">
@@ -30,7 +46,6 @@ function fetchLatestNotices() {
       data.forEach(notice => {
         let noticeDiv = document.createElement('div');
         noticeDiv.className = "notice";
-        // Set flex basis and maximum width for each notice
         noticeDiv.style.flex = "1 1 300px";
         noticeDiv.style.maxWidth = "300px";
         noticeDiv.style.boxSizing = "border-box";
