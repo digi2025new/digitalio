@@ -1,27 +1,29 @@
 /* ---------------------------------------
-   1. GLOBAL RESET & DARK BACKGROUND
+   1. RESET & GLOBAL STYLES
 ---------------------------------------- */
-* {
+html, body {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-}
-
-body {
   font-family: Arial, sans-serif;
-  background-color: #0A192F; /* Deep dark blue */
+  background: #0A192F; /* Dark background */
   color: #fff;
-  line-height: 1.6;
 }
 
 /* ---------------------------------------
-   2. NEON FORM CONTAINER & ANIMATIONS
+   2. CENTERED LOGIN/SIGN-UP CONTAINER
 ---------------------------------------- */
-.neon-form-container {
+.login-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh; /* Full viewport height */
+}
+
+.login-box {
+  background: #0B2C4D; /* Dark navy with slight tint */
   width: 350px;
-  margin: 60px auto;
-  padding: 40px 30px;
-  background: #0B2C4D;
+  padding: 40px;
   border-radius: 8px;
   position: relative;
   box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
@@ -29,6 +31,7 @@ body {
   animation: neon-border-flicker 2s infinite;
 }
 
+/* Neon flicker animation for the box border */
 @keyframes neon-border-flicker {
   0%, 100% {
     box-shadow: 0 0 5px rgba(0, 255, 255, 0.6), 0 0 10px rgba(0, 255, 255, 0.6);
@@ -38,51 +41,46 @@ body {
   }
 }
 
-/* ---------------------------------------
-   3. FORM HEADINGS & GROUPS
----------------------------------------- */
-.neon-form-container h2 {
-  margin-bottom: 20px;
+.login-box h2 {
   text-align: center;
+  margin-bottom: 30px;
   color: #00FFFF; /* Neon turquoise */
 }
 
-.neon-form-group {
+/* ---------------------------------------
+   3. FORM GROUPS
+---------------------------------------- */
+.form-group {
   margin-bottom: 20px;
 }
 
-.neon-form-group label {
+.form-group label {
   display: block;
-  margin-bottom: 8px;
   font-weight: bold;
+  margin-bottom: 5px;
   color: #fff;
 }
 
-.neon-form-group input[type="text"],
-.neon-form-group input[type="password"],
-.neon-form-group input[type="date"],
-.neon-form-group input[type="number"],
-.neon-form-group input[type="file"],
-.neon-form-group select {
+.form-group input {
   width: 100%;
   padding: 10px;
   border: 1px solid #00FFFF;
   border-radius: 4px;
-  background: #072238;
+  background: #072238; /* Slightly darker input background */
   color: #fff;
   transition: box-shadow 0.3s ease;
 }
 
-.neon-form-group input:focus,
-.neon-form-group select:focus {
+/* Neon glow on focus */
+.form-group input:focus {
   outline: none;
   box-shadow: 0 0 8px #00FFFF;
 }
 
 /* ---------------------------------------
-   4. NEON BUTTONS & LINKS
+   4. BUTTON & LINKS
 ---------------------------------------- */
-.neon-btn {
+.btn {
   width: 100%;
   display: inline-block;
   padding: 10px 20px;
@@ -96,43 +94,40 @@ body {
   transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
-.neon-btn:hover {
+.btn:hover {
   background-color: #00CED1;
   transform: scale(1.05);
 }
 
-.neon-secondary-btn {
-  display: inline-block;
+.forgot-signup {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.forgot-signup a {
   color: #00FFFF;
   text-decoration: none;
-  margin-top: 10px;
+  margin: 0 5px;
   font-size: 0.9rem;
   transition: color 0.3s ease;
 }
 
-.neon-secondary-btn:hover {
+.forgot-signup a:hover {
   color: #00CED1;
 }
 
 /* ---------------------------------------
-   5. OVERRIDES & OTHER ELEMENTS
+   5. FLASH MESSAGES (OPTIONAL)
 ---------------------------------------- */
-a {
-  color: #00FFFF;
-  text-decoration: none;
+.flashes {
+  list-style: none;
+  padding: 10px;
+  margin: 0 auto;
+  max-width: 400px;
+  text-align: center;
 }
 
-a:hover {
-  color: #00CED1;
-}
-
-/* Optional: If you want to update the notice cards with a neon effect */
-.notice-card {
-  transition: transform 0.3s, box-shadow 0.3s;
-  border: 1px solid rgba(0, 255, 255, 0.2);
-}
-
-.notice-card:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+.flashes li {
+  margin-bottom: 10px;
+  color: #dc3545;
 }

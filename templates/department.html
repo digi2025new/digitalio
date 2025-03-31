@@ -1,16 +1,21 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="neon-form-container">
-  <h2>{{ department | upper }} Department Admin Login</h2>
-  <form method="POST" action="{{ url_for('department', dept=department) }}">
-    <div class="neon-form-group">
-      <label for="admin_pass">Admin Password:</label>
-      <input type="password" name="admin_pass" id="admin_pass" placeholder="Enter admin password (e.g., {{ department }}@22)" required>
-    </div>
-    <input type="submit" value="Enter Admin Panel" class="neon-btn">
-    <div style="text-align:center; margin-top:10px;">
-      <a href="{{ url_for('dashboard') }}" class="neon-secondary-btn">Back to Dashboard</a>
-    </div>
-  </form>
+<div class="login-container">
+  <div class="login-box">
+    <h2>{{ department | upper }} Department Admin Login</h2>
+    <form method="POST" action="{{ url_for('department', dept=department) }}">
+      <div class="form-group">
+        <label for="admin_pass">Admin Password:</label>
+        <input 
+          type="password" 
+          name="admin_pass" 
+          id="admin_pass" 
+          placeholder="e.g., {{ department }}@22" 
+          required
+        >
+      </div>
+      <input type="submit" value="Enter Admin Panel" class="btn">
+    </form>
+  </div>
 </div>
 {% endblock %}
