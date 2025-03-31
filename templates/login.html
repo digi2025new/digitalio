@@ -2,32 +2,29 @@
 {% block content %}
 <div class="login-container">
   <div class="login-box">
-    <h2>Sign In</h2>
+    <h2>Login</h2>
     <form method="POST" action="{{ url_for('login') }}">
       <div class="form-group">
-        <label for="username">Username:</label>
+        <label for="username">Username</label>
         <input 
           type="text" 
           id="username" 
           name="username" 
-          placeholder="Admin" 
-          required
-        >
+          placeholder="Enter your username" 
+          required>
       </div>
       <div class="form-group">
-        <label for="password">Password:</label>
+        <label for="password">Password</label>
         <input 
           type="password" 
           id="password" 
           name="password" 
-          placeholder="••••••••" 
-          required
-        >
+          placeholder="Enter your password" 
+          required>
       </div>
       <input type="submit" value="Login" class="btn">
       <div class="forgot-signup">
-        <a href="#">Forgot Password?</a> |
-        <a href="{{ url_for('signup') }}">Sign Up</a>
+        <a href="{{ url_for('signup') }}">Don't have an account? Sign Up</a>
       </div>
     </form>
   </div>
