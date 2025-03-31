@@ -1,34 +1,35 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="form-container">
+<div class="neon-form-container">
   <h2>Preschedule Notice for {{ department | upper }}</h2>
   <form method="POST" action="{{ url_for('schedule_notice', dept=department) }}" enctype="multipart/form-data">
-    <div class="form-group">
+    <div class="neon-form-group">
       <label for="file">Select File:</label>
       <input type="file" name="file" id="file" required>
     </div>
-    <div class="form-group">
+    <div class="neon-form-group">
       <label for="date">Select Date:</label>
       <input type="date" name="date" id="date" required>
     </div>
-    <div class="form-group">
+    <div class="neon-form-group">
       <label for="time">Select Time (hh:mm):</label>
       <input type="text" name="time" id="time" placeholder="hh:mm" required>
     </div>
-    <div class="form-group">
+    <div class="neon-form-group">
       <label for="ampm">AM/PM:</label>
       <select name="ampm" id="ampm" required>
          <option value="AM">AM</option>
          <option value="PM">PM</option>
       </select>
     </div>
-    <!-- Optional expiration date input -->
-    <div class="form-group">
+    <div class="neon-form-group">
       <label for="expire_date">Expiration Date (optional, IST):</label>
-      <input type="date" name="expire_date" id="expire_date" placeholder="YYYY-MM-DD">
+      <input type="date" name="expire_date" id="expire_date">
     </div>
-    <input type="submit" value="Schedule Notice" class="btn">
+    <input type="submit" value="Schedule Notice" class="neon-btn">
+    <div style="text-align:center; margin-top:10px;">
+      <a href="{{ url_for('admin', dept=department) }}" class="neon-secondary-btn">Back to Admin Panel</a>
+    </div>
   </form>
-  <p><a href="{{ url_for('admin', dept=department) }}">Back to Admin Panel</a></p>
 </div>
 {% endblock %}
