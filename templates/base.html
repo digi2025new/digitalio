@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Digital Notice Board</title>
-  <!-- Link to your CSS and JavaScript files -->
+  <!-- Link to your CSS and JS files -->
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   <script src="{{ url_for('static', filename='script.js') }}"></script>
 </head>
@@ -12,19 +12,25 @@
   <header>
     <div class="header-container">
       <h1>Digital Notice Board</h1>
-      {% if not hide_nav %}
-      <nav>
-        <ul class="nav-list">
-          {% if session.username %}
-            <li><a href="{{ url_for('dashboard') }}" class="nav-btn">Dashboard</a></li>
-            <li><a href="{{ url_for('logout') }}" class="nav-btn">Logout</a></li>
-          {% else %}
+      {% if hide_nav %}
+        <nav>
+          <ul class="nav-list">
             <li><a href="{{ url_for('index') }}" class="nav-btn">Home</a></li>
-            <li><a href="{{ url_for('login') }}" class="nav-btn">Login</a></li>
-            <li><a href="{{ url_for('signup') }}" class="nav-btn">Sign Up</a></li>
-          {% endif %}
-        </ul>
-      </nav>
+          </ul>
+        </nav>
+      {% else %}
+        <nav>
+          <ul class="nav-list">
+            {% if session.username %}
+              <li><a href="{{ url_for('dashboard') }}" class="nav-btn">Dashboard</a></li>
+              <li><a href="{{ url_for('logout') }}" class="nav-btn">Logout</a></li>
+            {% else %}
+              <li><a href="{{ url_for('index') }}" class="nav-btn">Home</a></li>
+              <li><a href="{{ url_for('login') }}" class="nav-btn">Login</a></li>
+              <li><a href="{{ url_for('signup') }}" class="nav-btn">Sign Up</a></li>
+            {% endif %}
+          </ul>
+        </nav>
       {% endif %}
     </div>
   </header>
