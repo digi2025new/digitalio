@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="public-page">
-  <h2>{{ department | upper }} Notices</h2>
-  <div id="notices-container">
+<div class="public-page" style="padding: 20px;">
+  <h2 style="text-align: center;">{{ department | upper }} Notices</h2>
+  <div id="notices-container" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
     {% for notice in notices %}
-      <div class="notice">
+      <div class="notice" style="margin: 10px;">
         {% set file_url = url_for('uploaded_file', filename=notice[2]) %}
         {% if notice[3] in ['png', 'jpg', 'jpeg', 'gif', 'pdf_image'] %}
-          <img src="{{ file_url }}" alt="Notice Image">
+          <img src="{{ file_url }}" alt="Notice Image" style="max-width: 100%; height: auto;">
         {% elif notice[3] == 'mp4' %}
-          <video src="{{ file_url }}" controls></video>
+          <video src="{{ file_url }}" controls style="max-width: 100%; height: auto;"></video>
         {% elif notice[3] == 'mp3' %}
           <audio src="{{ file_url }}" controls></audio>
         {% else %}
@@ -30,11 +30,12 @@ function fetchLatestNotices() {
       data.forEach(notice => {
         let noticeDiv = document.createElement('div');
         noticeDiv.className = "notice";
+        noticeDiv.style.margin = "10px";
         let fileUrl = "{{ url_for('uploaded_file', filename='') }}" + notice.filename;
         if (['png', 'jpg', 'jpeg', 'gif', 'pdf_image'].includes(notice.filetype)) {
-          noticeDiv.innerHTML = `<img src="${fileUrl}" alt="Notice Image">`;
+          noticeDiv.innerHTML = `<img src="${fileUrl}" alt="Notice Image" style="max-width: 100%; height: auto;">`;
         } else if (notice.filetype === 'mp4') {
-          noticeDiv.innerHTML = `<video src="${fileUrl}" controls></video>`;
+          noticeDiv.innerHTML = `<video src="${fileUrl}" controls style="max-width: 100%; height: auto;"></video>`;
         } else if (notice.filetype === 'mp3') {
           noticeDiv.innerHTML = `<audio src="${fileUrl}" controls></audio>`;
         } else {
