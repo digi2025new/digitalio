@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="public-page">
+<div class="notices-display-container">
   <h2>{{ department | upper }} Notices</h2>
-  <div id="notices-container">
+  <div class="notices-grid">
     {% for notice in notices %}
-      <div class="notice">
+      <div class="notice-card">
         {% set file_url = url_for('uploaded_file', filename=notice[2]) %}
         {% if notice[3] in ['png', 'jpg', 'jpeg', 'gif', 'pdf_image'] %}
           <img src="{{ file_url }}" alt="Notice Image">
@@ -19,33 +19,4 @@
     {% endfor %}
   </div>
 </div>
-
-<script>
-function fetchLatestNotices() {
-  fetch("{{ url_for('get_latest_notices', dept=department) }}")
-    .then(response => response.json())
-    .then(data => {
-      const container = document.getElementById('notices-container');
-      container.innerHTML = "";
-      data.forEach(notice => {
-        let noticeDiv = document.createElement('div');
-        noticeDiv.className = "notice";
-        let fileUrl = "{{ url_for('uploaded_file', filename='') }}" + notice.filename;
-        if (['png', 'jpg', 'jpeg', 'gif', 'pdf_image'].includes(notice.filetype)) {
-          noticeDiv.innerHTML = `<img src="${fileUrl}" alt="Notice Image">`;
-        } else if (notice.filetype === 'mp4') {
-          noticeDiv.innerHTML = `<video src="${fileUrl}" controls></video>`;
-        } else if (notice.filetype === 'mp3') {
-          noticeDiv.innerHTML = `<audio src="${fileUrl}" controls></audio>`;
-        } else {
-          noticeDiv.innerHTML = `<a href="${fileUrl}" target="_blank">View Document</a>`;
-        }
-        container.appendChild(noticeDiv);
-      });
-    })
-    .catch(error => console.error("Error fetching notices:", error));
-}
-
-setInterval(fetchLatestNotices, 5000);
-</script>
 {% endblock %}
