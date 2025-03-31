@@ -1,13 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="hero">
-  <div class="hero-content">
-    <h1>Welcome to the IoT Digital Notice Board</h1>
+<div class="login-container">
+  <div class="login-box">
+    <h2>Welcome to Digital Notice Board</h2>
     <p>Stay updated with the latest notices and departmental updates.</p>
-    <div class="hero-buttons">
-      <a href="{{ url_for('signup') }}" class="btn">Sign Up</a>
-      <a href="{{ url_for('login') }}" class="btn btn-secondary">Login</a>
-    </div>
+    <a href="{{ url_for('signup') }}" class="btn" style="margin-top:20px;">Sign Up</a>
+    <a href="{{ url_for('login') }}" class="btn" style="margin-top:10px;">Login</a>
   </div>
 </div>
 {% endblock %}

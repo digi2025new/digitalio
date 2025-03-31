@@ -1,12 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="dashboard">
-  <h2>Dashboard</h2>
-  <p>Select your department:</p>
-  <div class="departments">
-    {% for dept in departments %}
-      <button onclick="window.location.href='{{ url_for('department', dept=dept) }}'">{{ dept | upper }}</button>
-    {% endfor %}
+<div class="login-container">
+  <div class="login-box">
+    <h2>Dashboard</h2>
+    <p>Select your department:</p>
+    <div style="display:flex; justify-content:center; gap:15px; margin-top:20px;">
+      {% for dept in departments %}
+        <button class="btn" onclick="window.location.href='{{ url_for('department', dept=dept) }}'">{{ dept | upper }}</button>
+      {% endfor %}
+    </div>
   </div>
 </div>
 {% endblock %}

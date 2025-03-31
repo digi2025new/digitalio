@@ -4,28 +4,27 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Digital Notice Board</title>
-  <!-- Link to the neon-themed CSS -->
+  <!-- Link to your neon-themed CSS file -->
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-  <!-- If you have a script.js, include it here -->
+  <!-- Optional: Include your JavaScript file if needed -->
   <script src="{{ url_for('static', filename='script.js') }}"></script>
 </head>
 <body>
-  <!-- Header with navigation -->
   <header>
-    <div class="header-container" style="padding:20px; text-align:center;">
-      <h1 style="color:#00FFFF;">Digital Notice Board</h1>
+    <div class="header-container">
+      <h1>Digital Notice Board</h1>
       <nav>
-        <ul style="list-style:none; display:inline-block; padding:0;">
+        <ul class="nav-list">
           {% if hide_nav %}
             <!-- Navigation hidden on public display pages -->
           {% else %}
             {% if session.username %}
-              <li style="display:inline; margin:0 10px;"><a href="{{ url_for('dashboard') }}" style="color:#00FFFF;">Dashboard</a></li>
-              <li style="display:inline; margin:0 10px;"><a href="{{ url_for('logout') }}" style="color:#00FFFF;">Logout</a></li>
+              <li><a href="{{ url_for('dashboard') }}" class="nav-btn">Dashboard</a></li>
+              <li><a href="{{ url_for('logout') }}" class="nav-btn">Logout</a></li>
             {% else %}
-              <li style="display:inline; margin:0 10px;"><a href="{{ url_for('index') }}" style="color:#00FFFF;">Home</a></li>
-              <li style="display:inline; margin:0 10px;"><a href="{{ url_for('login') }}" style="color:#00FFFF;">Login</a></li>
-              <li style="display:inline; margin:0 10px;"><a href="{{ url_for('signup') }}" style="color:#00FFFF;">Sign Up</a></li>
+              <li><a href="{{ url_for('index') }}" class="nav-btn">Home</a></li>
+              <li><a href="{{ url_for('login') }}" class="nav-btn">Login</a></li>
+              <li><a href="{{ url_for('signup') }}" class="nav-btn">Sign Up</a></li>
             {% endif %}
           {% endif %}
         </ul>
@@ -33,19 +32,22 @@
     </div>
   </header>
 
-  <!-- Flash messages (if any) -->
-  {% with messages = get_flashed_messages() %}
-    {% if messages %}
-      <ul class="flashes">
-        {% for message in messages %}
-          <li>{{ message }}</li>
-        {% endfor %}
-      </ul>
-    {% endif %}
-  {% endwith %}
+  <!-- Main container to center all page content -->
+  <main class="main-container">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul class="flashes">
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
 
-  <!-- Main content block -->
-  {% block content %}{% endblock %}
-  
+  <footer class="footer">
+    <p>&copy; 2025 Digital Notice Board. All rights reserved.</p>
+  </footer>
 </body>
 </html>
