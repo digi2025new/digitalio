@@ -1,87 +1,88 @@
 /* ---------------------------------------
    1. RESET & GLOBAL STYLES
 ---------------------------------------- */
-html, body {
+* {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+body {
   font-family: Arial, sans-serif;
   background: #0A192F; /* Dark background */
   color: #fff;
+  text-align: center; /* Center text by default */
 }
 
 /* ---------------------------------------
-   2. CENTERED LOGIN/SIGN-UP CONTAINER
+   2. HEADER & NAVIGATION
 ---------------------------------------- */
-.login-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh; /* Full viewport height */
+.header-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
-.login-box {
-  background: #0B2C4D; /* Dark navy with slight tint */
-  width: 350px;
-  padding: 40px;
-  border-radius: 8px;
-  position: relative;
-  box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
-  border: 1px solid rgba(0, 255, 255, 0.2);
-  animation: neon-border-flicker 2s infinite;
-}
-
-/* Neon flicker animation for the box border */
-@keyframes neon-border-flicker {
-  0%, 100% {
-    box-shadow: 0 0 5px rgba(0, 255, 255, 0.6), 0 0 10px rgba(0, 255, 255, 0.6);
-  }
-  50% {
-    box-shadow: 0 0 5px rgba(0, 255, 255, 0.2), 0 0 10px rgba(0, 255, 255, 0.2);
-  }
-}
-
-.login-box h2 {
-  text-align: center;
-  margin-bottom: 30px;
+.header-container h1 {
   color: #00FFFF; /* Neon turquoise */
 }
 
-/* ---------------------------------------
-   3. FORM GROUPS
----------------------------------------- */
-.form-group {
-  margin-bottom: 20px;
+.nav-list {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+  display: inline-flex;
+  gap: 20px;
 }
 
-.form-group label {
-  display: block;
+.nav-btn {
+  color: #00FFFF;
+  text-decoration: none;
   font-weight: bold;
-  margin-bottom: 5px;
-  color: #fff;
+  transition: color 0.3s, transform 0.3s;
 }
 
-.form-group input {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #00FFFF;
-  border-radius: 4px;
-  background: #072238; /* Slightly darker input background */
-  color: #fff;
-  transition: box-shadow 0.3s ease;
-}
-
-/* Neon glow on focus */
-.form-group input:focus {
-  outline: none;
-  box-shadow: 0 0 8px #00FFFF;
+.nav-btn:hover {
+  color: #00CED1;
+  transform: scale(1.1);
 }
 
 /* ---------------------------------------
-   4. BUTTON & LINKS
+   3. MAIN CONTAINER & FOOTER
+---------------------------------------- */
+.main-container {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+}
+
+.footer {
+  margin-top: 40px;
+  padding: 20px 0;
+  background: #0B2C4D;
+  color: #00FFFF;
+}
+
+/* ---------------------------------------
+   4. FLASH MESSAGES
+---------------------------------------- */
+.flashes {
+  list-style: none;
+  padding: 10px;
+  margin: 10px auto;
+  max-width: 400px;
+  text-align: center;
+}
+
+.flashes li {
+  margin-bottom: 10px;
+  color: #dc3545;
+}
+
+/* ---------------------------------------
+   5. BUTTONS (Common Classes)
 ---------------------------------------- */
 .btn {
-  width: 100%;
   display: inline-block;
   padding: 10px 20px;
   background-color: #00FFFF;
@@ -90,44 +91,11 @@ html, body {
   border-radius: 4px;
   cursor: pointer;
   font-size: 1rem;
-  text-align: center;
-  transition: background-color 0.3s ease, transform 0.3s ease;
+  text-decoration: none;
+  transition: background-color 0.3s, transform 0.3s;
 }
 
 .btn:hover {
   background-color: #00CED1;
   transform: scale(1.05);
-}
-
-.forgot-signup {
-  margin-top: 10px;
-  text-align: center;
-}
-
-.forgot-signup a {
-  color: #00FFFF;
-  text-decoration: none;
-  margin: 0 5px;
-  font-size: 0.9rem;
-  transition: color 0.3s ease;
-}
-
-.forgot-signup a:hover {
-  color: #00CED1;
-}
-
-/* ---------------------------------------
-   5. FLASH MESSAGES (OPTIONAL)
----------------------------------------- */
-.flashes {
-  list-style: none;
-  padding: 10px;
-  margin: 0 auto;
-  max-width: 400px;
-  text-align: center;
-}
-
-.flashes li {
-  margin-bottom: 10px;
-  color: #dc3545;
 }
