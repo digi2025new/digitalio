@@ -1,19 +1,19 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="slideshow-container">
-  <h2>{{ department | upper }} Slideshow</h2>
+<div class="slideshow-container" style="max-width: 1200px; margin: 0 auto; overflow: hidden; padding: 10px;">
+  <h2 style="text-align: center;">{{ department | upper }} Slideshow</h2>
   <div class="slideshow" id="slideshow">
     {% for notice in notices %}
-      <div class="slide" style="display: none;">
+      <div class="slide" style="display: none; text-align: center;">
         {% set file_url = url_for('uploaded_file', filename=notice[2]) %}
         {% if notice[3] in ['png', 'jpg', 'jpeg', 'gif', 'pdf_image'] %}
-          <img src="{{ file_url }}" alt="Notice Image">
+          <img src="{{ file_url }}" alt="Notice Image" style="width: 100%; height: auto; display: block; margin: 0 auto;">
         {% elif notice[3] == 'mp4' %}
-          <video src="{{ file_url }}" autoplay muted playsinline></video>
+          <video src="{{ file_url }}" autoplay muted playsinline controls style="width: 100%; height: auto; display: block; margin: 0 auto;"></video>
         {% elif notice[3] == 'mp3' %}
-          <audio src="{{ file_url }}" autoplay controls></audio>
+          <audio src="{{ file_url }}" autoplay controls style="width: 100%; display: block; margin: 0 auto;"></audio>
         {% else %}
-          <a href="{{ file_url }}" target="_blank" download>View Document</a>
+          <a href="{{ file_url }}" target="_blank" download style="display: inline-block;">View Document</a>
         {% endif %}
       </div>
     {% endfor %}
@@ -59,23 +59,23 @@ document.addEventListener('DOMContentLoaded', function() {
           const fileUrl = "{{ url_for('uploaded_file', filename='') }}" + notice.filename;
           if (['png', 'jpg', 'jpeg', 'gif', 'pdf_image'].includes(notice.filetype)) {
             newHTML += `
-              <div class="slide" style="display: none;">
-                <img src="${fileUrl}" alt="Notice Image">
+              <div class="slide" style="display: none; text-align: center;">
+                <img src="${fileUrl}" alt="Notice Image" style="width: 100%; height: auto; display: block; margin: 0 auto;">
               </div>`;
           } else if (notice.filetype === 'mp4') {
             newHTML += `
-              <div class="slide" style="display: none;">
-                <video src="${fileUrl}" autoplay muted playsinline></video>
+              <div class="slide" style="display: none; text-align: center;">
+                <video src="${fileUrl}" autoplay muted playsinline controls style="width: 100%; height: auto; display: block; margin: 0 auto;"></video>
               </div>`;
           } else if (notice.filetype === 'mp3') {
             newHTML += `
-              <div class="slide" style="display: none;">
-                <audio src="${fileUrl}" autoplay controls></audio>
+              <div class="slide" style="display: none; text-align: center;">
+                <audio src="${fileUrl}" autoplay controls style="width: 100%; display: block; margin: 0 auto;"></audio>
               </div>`;
           } else {
             newHTML += `
-              <div class="slide" style="display: none;">
-                <a href="${fileUrl}" target="_blank" download>View Document</a>
+              <div class="slide" style="display: none; text-align: center;">
+                <a href="${fileUrl}" target="_blank" download style="display: inline-block;">View Document</a>
               </div>`;
           }
         });
