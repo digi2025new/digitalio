@@ -2,122 +2,70 @@
 
 {% block head %}
 <style>
-  /* Override the body background for the admin page */
+  /* Admin Page Styling */
   body {
     background: #23272A !important;
+  }
+
+  /* Remove border joining outside box */
+  .login-container {
+    background: transparent !important;
+    padding: 20px 0;
+  }
+
+  /* Admin panel inside box styling */
+  .login-box {
+    width: 90%;
+    max-width: 1000px;
+    padding: 20px;
+    background: #2C2F33;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3); /* Adds floating effect */
+    border: none; /* Removes border */
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="login-container" style="background: #23272A; padding: 20px 0;">
-  <div class="login-box" style="width:90%; max-width:1000px; padding:20px; background: #2C2F33;">
+<div class="login-container">
+  <div class="login-box">
     <h2 style="text-align: center; color: #9AB8D3;">{{ department | upper }} Admin Panel</h2>
     
-    <!-- Upload Notice (Immediate) Section -->
+    <!-- Upload Notice Section -->
     <div class="upload-section" style="margin-bottom:20px;">
-      <h3 style="text-align:center; color: #9AB8D3;">Upload Notice (Immediate)</h3>
+      <h3 style="text-align:center; color: #9AB8D3;">Upload Notice</h3>
       <form method="POST" action="{{ url_for('admin', dept=department) }}" enctype="multipart/form-data">
-        <div class="form-group" style="margin-bottom:10px;">
+        <div class="form-group">
           <input type="file" name="file" required 
-                 style="width: 100%; padding:8px; border: 1px solid #9AB8D3; border-radius:4px; background: #23272A; color: #D1D1D1;">
-        </div>
-        <div class="form-group" style="margin-bottom:10px;">
-          <input type="date" name="expire_date" placeholder="Expiration Date (optional)" 
-                 style="width: 100%; padding:8px; border: 1px solid #9AB8D3; border-radius:4px; background: #23272A; color: #D1D1D1;">
+                 style="width: 100%; padding:8px; background: #23272A; color: #D1D1D1; border-radius: 4px;">
         </div>
         <input type="submit" value="Upload" class="btn" 
                style="background-color: #2CB1C0; color: #23272A;">
       </form>
     </div>
-    
-    <!-- Preschedule Notice Section -->
-    <div class="upload-section" style="margin-bottom:20px; text-align:center;">
-      <h3 style="color: #9AB8D3;">Preschedule Notice</h3>
-      <a href="{{ url_for('schedule_notice', dept=department) }}" class="btn" 
-         style="padding:8px 16px; display:inline-block; background-color: #2CB1C0; color: #23272A;">Preschedule Notice</a>
-    </div>
-    
-    <!-- Delete All Notices Section -->
-    <div class="upload-section" style="margin-bottom:20px; text-align:center;">
-      <form method="POST" action="{{ url_for('delete_all_notices', dept=department) }}" onsubmit="return confirm('Are you sure you want to delete ALL notices for this department?');">
-        <input type="submit" value="Delete All Notices" class="btn" 
-               style="background-color: #8B1E1E; color: #fff;">
-      </form>
-    </div>
-    
-    <!-- Uploaded Immediate Notices Section -->
-    <div class="notices-section" style="margin-bottom:20px;">
-      <h3 style="text-align:center; color: #9AB8D3;">Uploaded Immediate Notices</h3>
+
+    <!-- Notices Display Section -->
+    <div class="notices-section">
+      <h3 style="text-align:center; color: #9AB8D3;">Uploaded Notices</h3>
       <div class="notices-grid" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
         {% for notice in immediate_notices %}
         <div class="notice-card" style="flex: 1 1 300px; max-width:300px; background: #23272A; padding:10px; border-radius:4px;">
           {% set file_url = url_for('uploaded_file', filename=notice[2]) %}
-          {% if notice[3] in ['png', 'jpg', 'jpeg', 'gif', 'pdf_image'] %}
-            <img src="{{ file_url }}" alt="Notice Image" 
-                 style="width:100%; height:auto; display:block; margin-bottom:10px;">
-          {% elif notice[3] == 'mp4' %}
-            <video src="{{ file_url }}" controls 
-                   style="width:100%; height:auto; display:block; margin-bottom:10px;"></video>
-          {% elif notice[3] == 'mp3' %}
-            <audio src="{{ file_url }}" controls 
-                   style="width:100%; display:block; margin-bottom:10px;"></audio>
-          {% else %}
-            <a href="{{ file_url }}" target="_blank" style="color: #2CB1C0;">View Document</a>
-          {% endif %}
+          <a href="{{ file_url }}" target="_blank" style="color: #2CB1C0;">View Notice</a>
           <div class="notice-actions" style="text-align:center;">
-            {% if notice[0] is not none %}
             <a href="{{ url_for('delete_notice', notice_id=notice[0]) }}" class="btn" 
-               style="background-color: #A33E3E; color: #fff;" onclick="return confirm('Are you sure you want to delete this notice?');">
+               style="background-color: #A33E3E; color: #fff;" onclick="return confirm('Delete this notice?');">
               Delete
             </a>
-            {% else %}
-            <span style="color: #D1D1D1;">Invalid ID</span>
-            {% endif %}
           </div>
         </div>
         {% endfor %}
       </div>
     </div>
-    
-    <!-- Prescheduled Notices Section -->
-    <div class="notices-section" style="margin-bottom:20px;">
-      <h3 style="text-align:center; color: #9AB8D3;">Prescheduled Notices</h3>
-      <div class="notices-grid" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
-        {% for notice in prescheduled_notices %}
-        <div class="notice-card" style="flex: 1 1 300px; max-width:300px; background: #23272A; padding:10px; border-radius:4px;">
-          {% set file_url = url_for('uploaded_file', filename=notice[2]) %}
-          {% if notice[3] in ['png', 'jpg', 'jpeg', 'gif', 'pdf_image'] %}
-            <img src="{{ file_url }}" alt="Notice Image" 
-                 style="width:100%; height:auto; display:block; margin-bottom:10px;">
-          {% elif notice[3] == 'mp4' %}
-            <video src="{{ file_url }}" controls 
-                   style="width:100%; height:auto; display:block; margin-bottom:10px;"></video>
-          {% elif notice[3] == 'mp3' %}
-            <audio src="{{ file_url }}" controls 
-                   style="width:100%; display:block; margin-bottom:10px;"></audio>
-          {% else %}
-            <a href="{{ file_url }}" target="_blank" style="color: #2CB1C0;">View Document</a>
-          {% endif %}
-          <div class="notice-actions" style="text-align:center;">
-            {% if notice[0] is not none %}
-            <a href="{{ url_for('delete_notice', notice_id=notice[0]) }}" class="btn" 
-               style="background-color: #A33E3E; color: #fff;" onclick="return confirm('Are you sure you want to delete this notice?');">
-              Delete
-            </a>
-            {% else %}
-            <span style="color: #D1D1D1;">Invalid ID</span>
-            {% endif %}
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-    
+
     <!-- Admin Navigation -->
     <div class="admin-nav" style="text-align:center; margin-top:20px;">
       <a href="{{ url_for('dashboard') }}" class="btn" 
-         style="width:auto; background-color: #2CB1C0; color: #23272A;">
+         style="background-color: #2CB1C0; color: #23272A;">
          Back to Dashboard
       </a>
     </div>
