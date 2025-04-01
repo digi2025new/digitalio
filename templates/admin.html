@@ -2,27 +2,32 @@
 {% set hide_nav = true %}
 {% block content %}
 <style>
-  /* Dark Theme for Admin Panel */
+  /* Dark Theme for Background */
   body {
-    background-color: #1E1E1E;
-    color: #FFFFFF;
+    background-color: #1E1E1E; /* Dark Gray */
+    color: #FFFFFF; /* White Text */
+    font-family: 'Arial', sans-serif;
   }
 
+  /* Admin Panel Container */
   .admin-container {
     width: 90%;
     max-width: 900px;
     margin: auto;
     padding: 20px;
-    background: #2C2C2C;
+    background: #FFFFFF; /* Inside Box Stays Light */
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    animation: fadeIn 0.8s ease-in-out;
   }
 
+  /* Headings */
   h2, h3 {
     color: #4A90E2;
     text-align: center;
   }
 
+  /* Buttons */
   .btn {
     display: inline-block;
     padding: 10px 20px;
@@ -32,32 +37,38 @@
     font-weight: bold;
     border: none;
     cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+  }
+
+  .btn:hover {
+    transform: scale(1.05);
   }
 
   .btn-upload {
-    background-color: #43A047;
+    background-color: #7CB342;
   }
 
   .btn-upload:hover {
-    background-color: #388E3C;
+    background-color: #689F38;
   }
 
   .btn-delete {
-    background-color: #E53935;
+    background-color: #E74C3C;
   }
 
   .btn-delete:hover {
-    background-color: #C62828;
+    background-color: #CD3E31;
   }
 
   .btn-primary {
-    background-color: #2196F3;
+    background-color: #4A90E2;
   }
 
   .btn-primary:hover {
-    background-color: #1976D2;
+    background-color: #3B7DC2;
   }
 
+  /* Notice Grid */
   .notices-grid {
     display: flex;
     flex-wrap: wrap;
@@ -66,18 +77,42 @@
   }
 
   .notice-card {
-    background: #333333;
+    background: #FFFFFF;
     border: 2px solid #4A90E2;
     padding: 10px;
     border-radius: 6px;
-    box-shadow: 2px 2px 8px rgba(255, 255, 255, 0.1);
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
     width: 280px;
     text-align: center;
+    animation: slideUp 0.6s ease-in-out;
   }
 
   .notice-card img, .notice-card video {
     max-width: 100%;
     border-radius: 4px;
+  }
+
+  /* Animations */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 </style>
 
