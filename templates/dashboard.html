@@ -4,7 +4,7 @@
   <div class="login-box" style="width: 100%; max-width: 500px; padding: 40px; margin: auto;">
     <h2>Dashboard</h2>
     <p style="margin-bottom:20px;">Select your department:</p>
-    <div style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; margin-top: 20px;">
+    <div style="display: flex; gap: 15px; justify-content: center; margin-top: 20px;">
       {% for dept in departments %}
         <button class="btn" onclick="window.location.href='{{ url_for('department', dept=dept) }}'">{{ dept | upper }}</button>
       {% endfor %}
