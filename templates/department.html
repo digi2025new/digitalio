@@ -1,17 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="login-container">
-  <div class="login-box">
+<div class="login-container" style="padding: 20px;">
+  <div class="login-box" style="width: 100%; max-width: 600px; padding: 50px; margin: auto;">
     <h2>{{ department | upper }} Department Admin Login</h2>
     <form method="POST" action="{{ url_for('department', dept=department) }}">
       <div class="form-group">
         <label for="admin_pass">Admin Password</label>
-        <input 
-          type="password" 
-          id="admin_pass" 
-          name="admin_pass" 
-          placeholder="e.g., {{ department }}@22" 
-          required>
+        <input type="password" id="admin_pass" name="admin_pass" placeholder="Enter admin password (e.g., {{ department }}@22)" required>
       </div>
       <input type="submit" value="Enter Admin Panel" class="btn">
     </form>
