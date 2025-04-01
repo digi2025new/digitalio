@@ -2,7 +2,7 @@
 
 {% block head %}
 <style>
-  /* Override the body background only for the admin page */
+  /* Override the body background for the admin page */
   body {
     background: #23272A !important;
   }
@@ -11,7 +11,7 @@
 
 {% block content %}
 <div class="login-container" style="background: #23272A; padding: 20px 0;">
-  <div class="login-box" style="width:90%; max-width:1000px; padding:20px; background: #2C2F33; border: 1px solid rgba(44, 177, 192, 0.5);">
+  <div class="login-box" style="width:90%; max-width:1000px; padding:20px; background: #2C2F33;">
     <h2 style="text-align: center; color: #9AB8D3;">{{ department | upper }} Admin Panel</h2>
     
     <!-- Upload Notice (Immediate) Section -->
@@ -51,7 +51,7 @@
       <h3 style="text-align:center; color: #9AB8D3;">Uploaded Immediate Notices</h3>
       <div class="notices-grid" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
         {% for notice in immediate_notices %}
-        <div class="notice-card" style="flex: 1 1 300px; max-width:300px; background: #23272A; padding:10px; border: 1px solid #2C2F33; border-radius:4px;">
+        <div class="notice-card" style="flex: 1 1 300px; max-width:300px; background: #23272A; padding:10px; border-radius:4px;">
           {% set file_url = url_for('uploaded_file', filename=notice[2]) %}
           {% if notice[3] in ['png', 'jpg', 'jpeg', 'gif', 'pdf_image'] %}
             <img src="{{ file_url }}" alt="Notice Image" 
@@ -85,7 +85,7 @@
       <h3 style="text-align:center; color: #9AB8D3;">Prescheduled Notices</h3>
       <div class="notices-grid" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
         {% for notice in prescheduled_notices %}
-        <div class="notice-card" style="flex: 1 1 300px; max-width:300px; background: #23272A; padding:10px; border: 1px solid #2C2F33; border-radius:4px;">
+        <div class="notice-card" style="flex: 1 1 300px; max-width:300px; background: #23272A; padding:10px; border-radius:4px;">
           {% set file_url = url_for('uploaded_file', filename=notice[2]) %}
           {% if notice[3] in ['png', 'jpg', 'jpeg', 'gif', 'pdf_image'] %}
             <img src="{{ file_url }}" alt="Notice Image" 
