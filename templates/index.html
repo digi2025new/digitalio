@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% set hide_nav = true %}
 {% block content %}
-<div class="login-container">
-  <div class="login-box">
+<div class="login-container" style="padding: 20px;">
+  <div class="login-box" style="width: 100%; max-width: 500px; padding: 40px; margin: auto;">
     <h2>Welcome to Digital Notice Board</h2>
-    <p>Stay updated with the latest notices and departmental updates.</p>
+    <p style="margin-bottom:20px;">Stay updated with the latest notices and departmental updates.</p>
     <a href="{{ url_for('signup') }}" class="btn" style="margin-top:20px;">Sign Up</a>
     <a href="{{ url_for('login') }}" class="btn" style="margin-top:10px;">Login</a>
   </div>
