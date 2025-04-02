@@ -99,17 +99,12 @@
   var socket = io();
   socket.emit('join', '{{ department }}');
 
-  // Helper to create a notice card (similar to the server-rendered HTML)
-  function createNoticeCard(notice, containerType) {
-    // containerType: 'immediate' or 'prescheduled'
+  function createNoticeCard(notice) {
     let card = document.createElement('div');
     card.id = "notice-" + notice.id;
     card.className = "notice-card";
     card.style.cssText = "flex: 1 1 300px; max-width:300px; background:#f9f9f9; padding:10px; border:1px solid #ddd; border-radius:4px;";
-
-    // Build file URL (assuming same route structure)
     let fileUrl = "/uploads/" + notice.filename;
-
     let mediaHTML = "";
     if (['png', 'jpg', 'jpeg', 'gif', 'pdf_image'].includes(notice.filetype)) {
       mediaHTML = '<img src="'+fileUrl+'" alt="Notice Image" style="width:100%;">';
@@ -121,40 +116,32 @@
       mediaHTML = '<a href="'+fileUrl+'" target="_blank">View Document</a>';
     }
     card.innerHTML = mediaHTML;
-
-    // Delete button section
     let btnDiv = document.createElement('div');
     btnDiv.style.cssText = "text-align:center; margin-top:10px;";
     btnDiv.innerHTML = `<a href="/delete_notice/${notice.id}" class="btn" style="background-color:#DC3545; color:#fff;" onclick="return confirm('Are you sure you want to delete this notice?');">Delete</a>`;
     card.appendChild(btnDiv);
-
     return card;
   }
 
-  // Listen for new immediate notices (when a scheduled notice becomes active or an immediate notice is uploaded)
   socket.on('new_notice', function(data) {
-    // Remove from prescheduled container if it exists
     let existing = document.getElementById("notice-" + data.id);
     if(existing) {
       let prescheduledContainer = document.getElementById('prescheduled-notices-container');
-      if(prescheduledContainer.contains(existing)) {
+      if(prescheduledContainer && prescheduledContainer.contains(existing)) {
         prescheduledContainer.removeChild(existing);
       }
     }
-    // Add to immediate notices container
     let container = document.getElementById('immediate-notices-container');
-    let card = createNoticeCard(data, 'immediate');
+    let card = createNoticeCard(data);
     container.insertBefore(card, container.firstChild);
   });
 
-  // Listen for new prescheduled notices (when they are first scheduled)
   socket.on('new_prescheduled_notice', function(data) {
     let container = document.getElementById('prescheduled-notices-container');
-    let card = createNoticeCard(data, 'prescheduled');
+    let card = createNoticeCard(data);
     container.insertBefore(card, container.firstChild);
   });
 
-  // When a scheduled notice becomes active, remove it from the prescheduled list
   socket.on('remove_prescheduled_notice', function(data) {
     let elem = document.getElementById("notice-" + data.id);
     if(elem && elem.parentElement.id === "prescheduled-notices-container") {
@@ -162,7 +149,6 @@
     }
   });
 
-  // Listen for delete notice events (including deletions and expirations)
   socket.on('delete_notice', function(data) {
     let elem = document.getElementById("notice-" + data.id);
     if(elem) {

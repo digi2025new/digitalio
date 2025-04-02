@@ -1,10 +1,11 @@
 {% extends "base.html" %}
+{% set hide_nav = true %}
 {% block content %}
 <div class="slideshow-container" style="max-width: 1400px; width: 95%; margin: 0 auto; padding: 10px; text-align: center;">
   <h2>{{ department | upper }} Slideshow</h2>
   <div class="slideshow" id="slideshow" style="position: relative; overflow: hidden;">
     {% for notice in notices %}
-      <div class="slide" style="display: none;">
+      <div id="slide-{{ notice[0] }}" class="slide" style="display: none;">
         {% set file_url = url_for('uploaded_file', filename=notice[2]) %}
         {% if notice[3] in ['png', 'jpg', 'jpeg', 'gif', 'pdf_image'] %}
           <img src="{{ file_url }}" alt="Notice Image" style="width: 100%; max-height: 90vh; object-fit: contain;">
@@ -22,10 +23,9 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // Basic slideshow functionality
-  let slideInterval;
   let slides = document.querySelectorAll('.slideshow .slide');
   let currentIndex = 0;
+  let slideInterval;
 
   function showSlide(index) {
     clearTimeout(slideInterval);
@@ -54,38 +54,59 @@ document.addEventListener('DOMContentLoaded', function() {
 
   startSlideshow();
 
-  // Initialize Socket.IO client and join the department room
   var socket = io();
   socket.emit('join', '{{ department }}');
 
-  // Listen for new notice events
-  socket.on('new_notice', function(data) {
-    console.log("New notice received:", data);
-    // Build the file URL using your uploads route
-    var fileUrl = "{{ url_for('uploaded_file', filename='') }}" + data.filename;
-    var slide = document.createElement('div');
+  function createSlide(notice) {
+    let slide = document.createElement('div');
+    slide.id = "slide-" + notice.id;
     slide.className = 'slide';
     slide.style.display = 'none';
-
-    if (['png', 'jpg', 'jpeg', 'gif', 'pdf_image'].includes(data.filetype)) {
-      slide.innerHTML = '<img src="'+fileUrl+'" alt="Notice Image" style="width:100%; max-height:90vh; object-fit:contain;">';
-    } else if (data.filetype === 'mp4') {
-      slide.innerHTML = '<video src="'+fileUrl+'" autoplay muted playsinline controls style="width:100%; max-height:90vh; object-fit:contain;"></video>';
-    } else if (data.filetype === 'mp3') {
-      slide.innerHTML = '<audio src="'+fileUrl+'" autoplay controls style="width:100%;"></audio>';
+    let fileUrl = "/uploads/" + notice.filename;
+    let html = "";
+    if (['png', 'jpg', 'jpeg', 'gif', 'pdf_image'].includes(notice.filetype)) {
+      html = `<img src="${fileUrl}" alt="Notice Image" style="width: 100%; max-height: 90vh; object-fit: contain;">`;
+    } else if (notice.filetype === 'mp4') {
+      html = `<video src="${fileUrl}" autoplay muted playsinline controls style="width: 100%; max-height: 90vh; object-fit: contain;"></video>`;
+    } else if (notice.filetype === 'mp3') {
+      html = `<audio src="${fileUrl}" autoplay controls style="width: 100%;"></audio>`;
     } else {
-      slide.innerHTML = '<a href="'+fileUrl+'" target="_blank" download>View Document</a>';
+      html = `<a href="${fileUrl}" target="_blank" download>View Document</a>`;
     }
+    slide.innerHTML = html;
+    return slide;
+  }
 
-    // Prepend the new slide to the slideshow container
-    var slideshow = document.getElementById('slideshow');
+  socket.on('new_notice', function(data) {
+    let slide = createSlide(data);
+    let slideshow = document.getElementById('slideshow');
     slideshow.insertBefore(slide, slideshow.firstChild);
-
-    // Update slides NodeList and optionally reset the slideshow.
     slides = document.querySelectorAll('.slideshow .slide');
-    // Optionally, show the new slide immediately:
-    currentIndex = 0;
-    showSlide(currentIndex);
+  });
+
+  socket.on('new_prescheduled_notice', function(data) {
+    let slide = createSlide(data);
+    // Optionally add a visual indicator that this is prescheduled
+    slide.style.opacity = "0.7";
+    let slideshow = document.getElementById('slideshow');
+    slideshow.insertBefore(slide, slideshow.firstChild);
+    slides = document.querySelectorAll('.slideshow .slide');
+  });
+
+  socket.on('remove_prescheduled_notice', function(data) {
+    let elem = document.getElementById("slide-" + data.id);
+    if(elem) {
+      elem.parentElement.removeChild(elem);
+      slides = document.querySelectorAll('.slideshow .slide');
+    }
+  });
+
+  socket.on('delete_notice', function(data) {
+    let elem = document.getElementById("slide-" + data.id);
+    if(elem) {
+      elem.parentElement.removeChild(elem);
+      slides = document.querySelectorAll('.slideshow .slide');
+    }
   });
 });
 </script>
