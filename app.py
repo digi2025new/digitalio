@@ -51,11 +51,14 @@ def init_db():
             filename TEXT NOT NULL,
             filetype TEXT NOT NULL,
             scheduled_time TIMESTAMP NULL,
-            expire_time TIMESTAMP
+            expire_time TIMESTAMP,
+            broadcasted BOOLEAN NOT NULL DEFAULT false
         )
     ''')
     # Ensure expire_time column exists with default value (30 days from NOW)
     c.execute("ALTER TABLE notices ADD COLUMN IF NOT EXISTS expire_time TIMESTAMP NOT NULL DEFAULT (NOW() + INTERVAL '30 days')")
+    # Ensure broadcasted column exists
+    c.execute("ALTER TABLE notices ADD COLUMN IF NOT EXISTS broadcasted BOOLEAN NOT NULL DEFAULT false")
     conn.commit()
     conn.close()
 
@@ -192,7 +195,7 @@ def admin(dept):
                                     RETURNING id
                                 """, (dept, image_filename, 'pdf_image', None, expire_time))
                                 new_id = c.fetchone()[0]
-                                # Emit new notice to clients in this department
+                                # Emit new notice event
                                 notice_data = {
                                     'id': new_id,
                                     'department': dept,
@@ -222,7 +225,7 @@ def admin(dept):
                     conn.close()
                     flash('File uploaded successfully.')
 
-                    # Emit new immediate notice event to public clients
+                    # Emit new immediate notice event
                     notice_data = {
                         'id': new_id,
                         'department': dept,
@@ -233,7 +236,7 @@ def admin(dept):
                     socketio.emit('new_notice', notice_data, room=dept)
                     return redirect(url_for('admin', dept=dept))
 
-            # Show immediate notices (no expire_time check)
+            # Show immediate notices (ignoring expire_time)
             conn = get_db_connection()
             c = conn.cursor()
             c.execute("""
@@ -244,7 +247,7 @@ def admin(dept):
             """, (dept,))
             immediate_notices = c.fetchall()
 
-            # Show prescheduled notices (no expire_time check)
+            # Show prescheduled notices (ignoring expire_time)
             c.execute("""
                 SELECT * FROM notices
                 WHERE department=%s
@@ -270,14 +273,16 @@ def delete_all_notices(dept):
     if 'dept' in session and session['dept'] == dept:
         conn = get_db_connection()
         c = conn.cursor()
-        c.execute("SELECT filename FROM notices WHERE department=%s", (dept,))
-        filenames = c.fetchall()
-        for (filename,) in filenames:
+        c.execute("SELECT id, filename FROM notices WHERE department=%s", (dept,))
+        notices = c.fetchall()
+        for (n_id, filename) in notices:
             try:
                 os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             except Exception as e:
                 print(e)
-        c.execute("DELETE FROM notices WHERE department=%s", (dept,))
+            c.execute("DELETE FROM notices WHERE id=%s", (n_id,))
+            # Emit delete event for each notice
+            socketio.emit('delete_notice', {'id': n_id}, room=dept)
         conn.commit()
         conn.close()
         flash("All notices deleted successfully.")
@@ -384,6 +389,7 @@ def delete_notice(notice_id):
                 c.execute("DELETE FROM notices WHERE id=%s", (notice_id,))
                 conn.commit()
                 flash('Notice deleted successfully.')
+                socketio.emit('delete_notice', {'id': notice_id}, room=department)
             else:
                 flash('Unauthorized action.')
         else:
@@ -456,6 +462,55 @@ def get_latest_notices(dept):
 def on_join(dept):
     join_room(dept)
     print(f"A client joined room: {dept}")
+
+# Background task to check scheduled and expired notices
+def background_notice_check():
+    while True:
+        try:
+            conn = get_db_connection()
+            c = conn.cursor()
+            # Check for scheduled notices that are now active and not yet broadcasted
+            c.execute("""
+                SELECT id, department, filename, filetype, scheduled_time 
+                FROM notices
+                WHERE scheduled_time IS NOT NULL AND scheduled_time <= NOW() AND broadcasted = false
+            """)
+            scheduled_notices = c.fetchall()
+            for notice in scheduled_notices:
+                n_id, dept, filename, filetype, scheduled_time = notice
+                notice_data = {
+                    'id': n_id,
+                    'department': dept,
+                    'filename': filename,
+                    'filetype': filetype,
+                    'scheduled_time': scheduled_time.strftime("%Y-%m-%d %H:%M:%S") if scheduled_time else None
+                }
+                socketio.emit('new_notice', notice_data, room=dept)
+                c.execute("UPDATE notices SET broadcasted = true WHERE id = %s", (n_id,))
+            conn.commit()
+
+            # Check for expired notices and remove them
+            c.execute("""
+                SELECT id, department, filename FROM notices
+                WHERE expire_time <= NOW()
+            """)
+            expired_notices = c.fetchall()
+            for notice in expired_notices:
+                n_id, dept, filename = notice
+                try:
+                    os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                except Exception as e:
+                    print(e)
+                c.execute("DELETE FROM notices WHERE id = %s", (n_id,))
+                socketio.emit('delete_notice', {'id': n_id}, room=dept)
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            print("Error in background_notice_check:", e)
+        eventlet.sleep(10)
+
+# Start background task
+eventlet.spawn(background_notice_check)
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT") or 5000)
