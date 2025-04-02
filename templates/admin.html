@@ -108,7 +108,7 @@
     card.style.cssText = "flex: 1 1 300px; max-width:300px; background:#f9f9f9; padding:10px; border:1px solid #ddd; border-radius:4px;";
 
     // Build file URL (assuming same route structure)
-    let fileUrl = "{{ url_for('uploaded_file', filename='') }}" + notice.filename;
+    let fileUrl = "/uploads/" + notice.filename;
 
     let mediaHTML = "";
     if (['png', 'jpg', 'jpeg', 'gif', 'pdf_image'].includes(notice.filetype)) {
@@ -125,7 +125,7 @@
     // Delete button section
     let btnDiv = document.createElement('div');
     btnDiv.style.cssText = "text-align:center; margin-top:10px;";
-    btnDiv.innerHTML = '<a href="{{ url_for("delete_notice", notice_id="") }}' + notice.id + '" class="btn" style="background-color:#DC3545; color:#fff;" onclick="return confirm(\'Are you sure you want to delete this notice?\');">Delete</a>';
+    btnDiv.innerHTML = `<a href="/delete_notice/${notice.id}" class="btn" style="background-color:#DC3545; color:#fff;" onclick="return confirm('Are you sure you want to delete this notice?');">Delete</a>`;
     card.appendChild(btnDiv);
 
     return card;
