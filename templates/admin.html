@@ -137,6 +137,7 @@
   });
 
   socket.on('new_prescheduled_notice', function(data) {
+    // For admin display, show immediately
     let container = document.getElementById('prescheduled-notices-container');
     let card = createNoticeCard(data);
     container.insertBefore(card, container.firstChild);

@@ -78,6 +78,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   socket.on('new_notice', function(data) {
+    // Immediate notices: add directly.
     let slide = createSlide(data);
     let slideshow = document.getElementById('slideshow');
     slideshow.insertBefore(slide, slideshow.firstChild);
@@ -85,12 +86,23 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   socket.on('new_prescheduled_notice', function(data) {
-    let slide = createSlide(data);
-    // Optionally add a visual indicator that this is prescheduled
-    slide.style.opacity = "0.7";
-    let slideshow = document.getElementById('slideshow');
-    slideshow.insertBefore(slide, slideshow.firstChild);
-    slides = document.querySelectorAll('.slideshow .slide');
+    // For public display, wait until the scheduled time is reached.
+    let scheduledTime = new Date(data.scheduled_time + " UTC");
+    let delay = scheduledTime.getTime() - Date.now();
+    if(delay > 0) {
+      setTimeout(function() {
+         let slide = createSlide(data);
+         let slideshow = document.getElementById('slideshow');
+         slideshow.insertBefore(slide, slideshow.firstChild);
+         slides = document.querySelectorAll('.slideshow .slide');
+      }, delay);
+    } else {
+      // If the scheduled time is already passed, add immediately.
+      let slide = createSlide(data);
+      let slideshow = document.getElementById('slideshow');
+      slideshow.insertBefore(slide, slideshow.firstChild);
+      slides = document.querySelectorAll('.slideshow .slide');
+    }
   });
 
   socket.on('remove_prescheduled_notice', function(data) {
