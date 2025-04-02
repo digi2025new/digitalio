@@ -2,11 +2,11 @@
 {% set hide_nav = true %}
 {% set show_home = false %}
 {% block content %}
-<div class="public-page" style="padding: 10px; width: 100%;">
+<div class="public-page" style="padding: 10px;">
   <h2 style="text-align: center;">{{ department | upper }} Notices</h2>
-  <div id="notices-container" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; width: 100%;">
+  <div id="notices-container" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
     {% for notice in notices %}
-      <div class="notice" style="flex: 1 1 auto; width: 100%; max-width: 100%; box-sizing: border-box; margin: 10px;">
+      <div class="notice" style="flex: 1 1 auto; max-width: 100%; box-sizing: border-box; margin: 10px;">
         {% set file_url = url_for('uploaded_file', filename=notice[2]) %}
         {% if notice[3] in ['png', 'jpg', 'jpeg', 'gif', 'pdf_image'] %}
           <img src="{{ file_url }}" alt="Notice Image" style="width: 100%; height: auto; max-height: 90vh; object-fit: contain; display: block; margin: 0 auto;">
@@ -31,9 +31,7 @@ function fetchLatestNotices() {
       container.innerHTML = "";
       data.forEach(notice => {
         let noticeDiv = document.createElement('div');
-        // Let the container adapt automatically to the screen width
         noticeDiv.style.flex = "1 1 auto";
-        noticeDiv.style.width = "100%";
         noticeDiv.style.maxWidth = "100%";
         noticeDiv.style.boxSizing = "border-box";
         noticeDiv.style.margin = "10px";
