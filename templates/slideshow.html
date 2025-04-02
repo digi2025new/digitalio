@@ -7,16 +7,12 @@
       <div class="slide" style="display: none;">
         {% set file_url = url_for('uploaded_file', filename=notice[2]) %}
         {% if notice[3] in ['png', 'jpg', 'jpeg', 'gif', 'pdf_image'] %}
-          <!-- Landscape & portrait images fill container width, up to 90% of viewport height -->
           <img src="{{ file_url }}" alt="Notice Image" style="width: 100%; max-height: 90vh; object-fit: contain;">
         {% elif notice[3] == 'mp4' %}
-          <!-- Videos also scale to container width, up to 90% of viewport height -->
           <video src="{{ file_url }}" autoplay muted playsinline controls style="width: 100%; max-height: 90vh; object-fit: contain;"></video>
         {% elif notice[3] == 'mp3' %}
-          <!-- Audio has no height restriction beyond container width -->
           <audio src="{{ file_url }}" autoplay controls style="width: 100%;"></audio>
         {% else %}
-          <!-- Fallback link for other document types -->
           <a href="{{ file_url }}" target="_blank" download>View Document</a>
         {% endif %}
       </div>
@@ -26,6 +22,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  // Basic slideshow functionality
   let slideInterval;
   let slides = document.querySelectorAll('.slideshow .slide');
   let currentIndex = 0;
@@ -33,15 +30,15 @@ document.addEventListener('DOMContentLoaded', function() {
   function showSlide(index) {
     clearTimeout(slideInterval);
     slides.forEach(slide => slide.style.display = 'none');
-    slides[index].style.display = 'block';
-
-    // If there's a video in the current slide, reset and handle 'onended'
-    let video = slides[index].querySelector('video');
-    if (video) {
-      video.currentTime = 0;
-      video.onended = nextSlide;
-    } else {
-      slideInterval = setTimeout(nextSlide, 5000);
+    if(slides[index]) {
+      slides[index].style.display = 'block';
+      let video = slides[index].querySelector('video');
+      if (video) {
+        video.currentTime = 0;
+        video.onended = nextSlide;
+      } else {
+        slideInterval = setTimeout(nextSlide, 5000);
+      }
     }
   }
 
@@ -56,6 +53,40 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   startSlideshow();
+
+  // Initialize Socket.IO client and join the department room
+  var socket = io();
+  socket.emit('join', '{{ department }}');
+
+  // Listen for new notice events
+  socket.on('new_notice', function(data) {
+    console.log("New notice received:", data);
+    // Build the file URL using your uploads route
+    var fileUrl = "{{ url_for('uploaded_file', filename='') }}" + data.filename;
+    var slide = document.createElement('div');
+    slide.className = 'slide';
+    slide.style.display = 'none';
+
+    if (['png', 'jpg', 'jpeg', 'gif', 'pdf_image'].includes(data.filetype)) {
+      slide.innerHTML = '<img src="'+fileUrl+'" alt="Notice Image" style="width:100%; max-height:90vh; object-fit:contain;">';
+    } else if (data.filetype === 'mp4') {
+      slide.innerHTML = '<video src="'+fileUrl+'" autoplay muted playsinline controls style="width:100%; max-height:90vh; object-fit:contain;"></video>';
+    } else if (data.filetype === 'mp3') {
+      slide.innerHTML = '<audio src="'+fileUrl+'" autoplay controls style="width:100%;"></audio>';
+    } else {
+      slide.innerHTML = '<a href="'+fileUrl+'" target="_blank" download>View Document</a>';
+    }
+
+    // Prepend the new slide to the slideshow container
+    var slideshow = document.getElementById('slideshow');
+    slideshow.insertBefore(slide, slideshow.firstChild);
+
+    // Update slides NodeList and optionally reset the slideshow.
+    slides = document.querySelectorAll('.slideshow .slide');
+    // Optionally, show the new slide immediately:
+    currentIndex = 0;
+    showSlide(currentIndex);
+  });
 });
 </script>
 {% endblock %}

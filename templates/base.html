@@ -4,8 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Digital Notice Board</title>
-  <!-- Link to your CSS and JavaScript files -->
+  <!-- Link to your CSS file -->
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <!-- Include Socket.IO client library from CDN -->
+  <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+  <!-- Link to your JavaScript file -->
   <script src="{{ url_for('static', filename='script.js') }}"></script>
 </head>
 <body>
