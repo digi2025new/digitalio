@@ -1,10 +1,12 @@
 {% extends "base.html" %}
+{% set hide_nav = true %}
+{% set show_home = false %}
 {% block content %}
 <div class="public-page" style="padding: 10px;">
   <h2 style="text-align: center;">{{ department | upper }} Notices</h2>
   <div id="notices-container" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
     {% for notice in notices %}
-      <div class="notice" style="flex: 1 1 400px; max-width: 400px; box-sizing: border-box; margin: 10px;">
+      <div class="notice" style="flex: 1 1 300px; max-width: 300px; box-sizing: border-box; margin: 10px;">
         {% set file_url = url_for('uploaded_file', filename=notice[2]) %}
         {% if notice[3] in ['png', 'jpg', 'jpeg', 'gif', 'pdf_image'] %}
           <img src="{{ file_url }}" alt="Notice Image" style="width: 100%; height: auto;">
@@ -30,8 +32,8 @@ function fetchLatestNotices() {
       data.forEach(notice => {
         let noticeDiv = document.createElement('div');
         noticeDiv.className = "notice";
-        noticeDiv.style.flex = "1 1 400px";
-        noticeDiv.style.maxWidth = "400px";
+        noticeDiv.style.flex = "1 1 300px";
+        noticeDiv.style.maxWidth = "300px";
         noticeDiv.style.boxSizing = "border-box";
         noticeDiv.style.margin = "10px";
         let fileUrl = "{{ url_for('uploaded_file', filename='') }}" + notice.filename;
