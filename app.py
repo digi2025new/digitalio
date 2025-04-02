@@ -57,7 +57,7 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def broadcast_notices(dept):
-    """Fetch current notices for the department and broadcast to all connected clients."""
+    """Fetch current notices for department and broadcast to clients."""
     conn = get_db_connection()
     c = conn.cursor()
     c.execute("""
@@ -200,7 +200,7 @@ def admin(dept):
                     conn = get_db_connection()
                     c = conn.cursor()
 
-                    # If file is PDF, convert it into images
+                    # If file is a PDF, convert it into images
                     if file_extension == 'pdf':
                         try:
                             pages = convert_from_path(file_path, dpi=200)
@@ -224,7 +224,7 @@ def admin(dept):
                         broadcast_notices(dept)
                         return redirect(url_for('admin', dept=dept))
 
-                    # Otherwise, insert the file as a normal notice
+                    # Otherwise, save the file as a normal notice
                     c.execute("""
                         INSERT INTO notices (department, filename, filetype, scheduled_time, expire_time)
                         VALUES (%s, %s, %s, %s, %s)
@@ -235,6 +235,7 @@ def admin(dept):
                     broadcast_notices(dept)
                     return redirect(url_for('admin', dept=dept))
 
+            # For GET, simply load current notices.
             conn = get_db_connection()
             c = conn.cursor()
             c.execute("""
