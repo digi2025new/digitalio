@@ -195,7 +195,7 @@ def admin(dept):
                                     RETURNING id
                                 """, (dept, image_filename, 'pdf_image', None, expire_time))
                                 new_id = c.fetchone()[0]
-                                # Emit new notice event
+                                # Emit new immediate notice event for each PDF page
                                 notice_data = {
                                     'id': new_id,
                                     'department': dept,
@@ -348,7 +348,18 @@ def schedule_notice(dept):
                             c.execute("""
                                 INSERT INTO notices (department, filename, filetype, scheduled_time, expire_time)
                                 VALUES (%s, %s, %s, %s, %s)
+                                RETURNING id
                             """, (dept, image_filename, 'pdf_image', utc_dt, expire_time))
+                            new_id = c.fetchone()[0]
+                            # Emit as a prescheduled notice (each page)
+                            notice_data = {
+                                'id': new_id,
+                                'department': dept,
+                                'filename': image_filename,
+                                'filetype': 'pdf_image',
+                                'scheduled_time': utc_dt.strftime("%Y-%m-%d %H:%M:%S")
+                            }
+                            socketio.emit('new_prescheduled_notice', notice_data, room=dept)
                         conn.commit()
                         flash('PDF converted and images scheduled successfully.')
                     except Exception as e:
@@ -362,10 +373,21 @@ def schedule_notice(dept):
                     c.execute("""
                         INSERT INTO notices (department, filename, filetype, scheduled_time, expire_time)
                         VALUES (%s, %s, %s, %s, %s)
+                        RETURNING id
                     """, (dept, filename, file_extension, utc_dt, expire_time))
+                    new_id = c.fetchone()[0]
                     conn.commit()
                     conn.close()
                     flash('Notice scheduled successfully.')
+                    # Emit a socket event for the prescheduled notice so admin panels can update
+                    notice_data = {
+                        'id': new_id,
+                        'department': dept,
+                        'filename': filename,
+                        'filetype': file_extension,
+                        'scheduled_time': utc_dt.strftime("%Y-%m-%d %H:%M:%S")
+                    }
+                    socketio.emit('new_prescheduled_notice', notice_data, room=dept)
                     return redirect(url_for('admin', dept=dept))
         return render_template('schedule_notice.html', department=dept)
     else:
@@ -485,6 +507,9 @@ def background_notice_check():
                     'filetype': filetype,
                     'scheduled_time': scheduled_time.strftime("%Y-%m-%d %H:%M:%S") if scheduled_time else None
                 }
+                # Tell admin panels to remove the notice from the prescheduled list
+                socketio.emit('remove_prescheduled_notice', {'id': n_id}, room=dept)
+                # Emit as an immediate notice
                 socketio.emit('new_notice', notice_data, room=dept)
                 c.execute("UPDATE notices SET broadcasted = true WHERE id = %s", (n_id,))
             conn.commit()
