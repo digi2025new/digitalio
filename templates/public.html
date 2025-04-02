@@ -7,14 +7,14 @@
   <div id="notices-container" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
     {% for notice in notices %}
       {% if notice[3] in ['png', 'jpg', 'jpeg', 'gif', 'pdf_image'] %}
-        <div class="notice" style="flex: 1 1 600px; max-width: 600px; box-sizing: border-box; margin: 10px;">
+        <div class="notice" style="flex: 1 1 800px; max-width: 800px; box-sizing: border-box; margin: 10px;">
           {% set file_url = url_for('uploaded_file', filename=notice[2]) %}
-          <img src="{{ file_url }}" alt="Notice Image" style="width: 100%; max-height: 80vh; object-fit: contain; display: block; margin: 0 auto;">
+          <img src="{{ file_url }}" alt="Notice Image" style="width: 100%; max-height: 90vh; object-fit: contain; display: block; margin: 0 auto;">
         </div>
       {% elif notice[3] == 'mp4' %}
-        <div class="notice" style="flex: 1 1 600px; max-width: 600px; box-sizing: border-box; margin: 10px;">
+        <div class="notice" style="flex: 1 1 800px; max-width: 800px; box-sizing: border-box; margin: 10px;">
           {% set file_url = url_for('uploaded_file', filename=notice[2]) %}
-          <video src="{{ file_url }}" controls style="width: 100%; max-height: 80vh; object-fit: contain; display: block; margin: 0 auto;"></video>
+          <video src="{{ file_url }}" controls style="width: 100%; max-height: 90vh; object-fit: contain; display: block; margin: 0 auto;"></video>
         </div>
       {% elif notice[3] == 'mp3' %}
         <div class="notice" style="flex: 1 1 300px; max-width: 300px; box-sizing: border-box; margin: 10px;">
@@ -40,13 +40,13 @@ function fetchLatestNotices() {
       container.innerHTML = "";
       data.forEach(notice => {
         let noticeDiv = document.createElement('div');
-        // For landscape notices (images and videos), use larger container
+        // For landscape images and videos, set container to 800px, else 300px
         if (['png', 'jpg', 'jpeg', 'gif', 'pdf_image'].includes(notice.filetype)) {
-          noticeDiv.style.flex = "1 1 600px";
-          noticeDiv.style.maxWidth = "600px";
+          noticeDiv.style.flex = "1 1 800px";
+          noticeDiv.style.maxWidth = "800px";
         } else if (notice.filetype === 'mp4') {
-          noticeDiv.style.flex = "1 1 600px";
-          noticeDiv.style.maxWidth = "600px";
+          noticeDiv.style.flex = "1 1 800px";
+          noticeDiv.style.maxWidth = "800px";
         } else if (notice.filetype === 'mp3') {
           noticeDiv.style.flex = "1 1 300px";
           noticeDiv.style.maxWidth = "300px";
@@ -58,9 +58,9 @@ function fetchLatestNotices() {
         noticeDiv.style.margin = "10px";
         let fileUrl = "{{ url_for('uploaded_file', filename='') }}" + notice.filename;
         if (['png', 'jpg', 'jpeg', 'gif', 'pdf_image'].includes(notice.filetype)) {
-          noticeDiv.innerHTML = `<img src="${fileUrl}" alt="Notice Image" style="width: 100%; max-height: 80vh; object-fit: contain; display: block; margin: 0 auto;">`;
+          noticeDiv.innerHTML = `<img src="${fileUrl}" alt="Notice Image" style="width: 100%; max-height: 90vh; object-fit: contain; display: block; margin: 0 auto;">`;
         } else if (notice.filetype === 'mp4') {
-          noticeDiv.innerHTML = `<video src="${fileUrl}" controls style="width: 100%; max-height: 80vh; object-fit: contain; display: block; margin: 0 auto;"></video>`;
+          noticeDiv.innerHTML = `<video src="${fileUrl}" controls style="width: 100%; max-height: 90vh; object-fit: contain; display: block; margin: 0 auto;"></video>`;
         } else if (notice.filetype === 'mp3') {
           noticeDiv.innerHTML = `<audio src="${fileUrl}" controls style="width: 100%; display: block; margin: 0 auto;"></audio>`;
         } else {
