@@ -1,19 +1,23 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="slideshow-container" style="position: relative; width: 100%; max-width: 1200px; margin: 0 auto; overflow: hidden; padding: 10px;">
-  <h2 style="text-align: center;">{{ department | upper }} Slideshow</h2>
-  <div class="slideshow" id="slideshow">
+<div class="slideshow-container" style="max-width: 1400px; width: 95%; margin: 0 auto; padding: 10px; text-align: center;">
+  <h2>{{ department | upper }} Slideshow</h2>
+  <div class="slideshow" id="slideshow" style="position: relative; overflow: hidden;">
     {% for notice in notices %}
-      <div class="slide" style="display: none; text-align: center; max-height: 80vh; overflow: hidden;">
+      <div class="slide" style="display: none;">
         {% set file_url = url_for('uploaded_file', filename=notice[2]) %}
         {% if notice[3] in ['png', 'jpg', 'jpeg', 'gif', 'pdf_image'] %}
-          <img src="{{ file_url }}" alt="Notice Image" style="width: 100%; max-height: 80vh; object-fit: contain; display: block; margin: 0 auto;">
+          <!-- Landscape & portrait images fill container width, up to 90% of viewport height -->
+          <img src="{{ file_url }}" alt="Notice Image" style="width: 100%; max-height: 90vh; object-fit: contain;">
         {% elif notice[3] == 'mp4' %}
-          <video src="{{ file_url }}" autoplay muted playsinline controls style="width: 100%; max-height: 80vh; object-fit: contain; display: block; margin: 0 auto;"></video>
+          <!-- Videos also scale to container width, up to 90% of viewport height -->
+          <video src="{{ file_url }}" autoplay muted playsinline controls style="width: 100%; max-height: 90vh; object-fit: contain;"></video>
         {% elif notice[3] == 'mp3' %}
-          <audio src="{{ file_url }}" autoplay controls style="width: 100%; display: block; margin: 0 auto;"></audio>
+          <!-- Audio has no height restriction beyond container width -->
+          <audio src="{{ file_url }}" autoplay controls style="width: 100%;"></audio>
         {% else %}
-          <a href="{{ file_url }}" target="_blank" download style="display: inline-block;">View Document</a>
+          <!-- Fallback link for other document types -->
+          <a href="{{ file_url }}" target="_blank" download>View Document</a>
         {% endif %}
       </div>
     {% endfor %}
@@ -25,12 +29,13 @@ document.addEventListener('DOMContentLoaded', function() {
   let slideInterval;
   let slides = document.querySelectorAll('.slideshow .slide');
   let currentIndex = 0;
-  let currentContent = document.getElementById('slideshow').innerHTML;
 
   function showSlide(index) {
     clearTimeout(slideInterval);
     slides.forEach(slide => slide.style.display = 'none');
     slides[index].style.display = 'block';
+
+    // If there's a video in the current slide, reset and handle 'onended'
     let video = slides[index].querySelector('video');
     if (video) {
       video.currentTime = 0;
@@ -50,49 +55,7 @@ document.addEventListener('DOMContentLoaded', function() {
     showSlide(currentIndex);
   }
 
-  function updateSlideshow() {
-    fetch("{{ url_for('get_latest_notices', dept=department) }}")
-      .then(response => response.json())
-      .then(data => {
-        let newHTML = "";
-        data.forEach(notice => {
-          const fileUrl = "{{ url_for('uploaded_file', filename='') }}" + notice.filename;
-          if (['png', 'jpg', 'jpeg', 'gif', 'pdf_image'].includes(notice.filetype)) {
-            newHTML += `
-              <div class="slide" style="display: none; text-align: center; max-height: 80vh; overflow: hidden;">
-                <img src="${fileUrl}" alt="Notice Image" style="width: 100%; max-height: 80vh; object-fit: contain; display: block; margin: 0 auto;">
-              </div>`;
-          } else if (notice.filetype === 'mp4') {
-            newHTML += `
-              <div class="slide" style="display: none; text-align: center; max-height: 80vh; overflow: hidden;">
-                <video src="${fileUrl}" autoplay muted playsinline controls style="width: 100%; max-height: 80vh; object-fit: contain; display: block; margin: 0 auto;"></video>
-              </div>`;
-          } else if (notice.filetype === 'mp3') {
-            newHTML += `
-              <div class="slide" style="display: none; text-align: center; max-height: 80vh; overflow: hidden;">
-                <audio src="${fileUrl}" autoplay controls style="width: 100%; display: block; margin: 0 auto;"></audio>
-              </div>`;
-          } else {
-            newHTML += `
-              <div class="slide" style="display: none; text-align: center; max-height: 80vh; overflow: hidden;">
-                <a href="${fileUrl}" target="_blank" download style="display: inline-block;">View Document</a>
-              </div>`;
-          }
-        });
-
-        if(newHTML !== currentContent) {
-          currentContent = newHTML;
-          clearTimeout(slideInterval);
-          document.getElementById('slideshow').innerHTML = newHTML;
-          slides = document.querySelectorAll('.slideshow .slide');
-          startSlideshow();
-        }
-      })
-      .catch(error => console.error("Error updating slideshow:", error));
-  }
-
   startSlideshow();
-  setInterval(updateSlideshow, 5000);
 });
 </script>
 {% endblock %}
