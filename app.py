@@ -1,3 +1,6 @@
+import eventlet
+eventlet.monkey_patch()
+
 import os
 import psycopg2
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory, make_response, jsonify
@@ -20,7 +23,7 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mp3', 'pdf', 'docx', 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Initialize SocketIO (using eventlet as async mode)
+# Initialize SocketIO with Eventlet async mode
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
 def get_db_connection():
@@ -189,7 +192,7 @@ def admin(dept):
                                     RETURNING id
                                 """, (dept, image_filename, 'pdf_image', None, expire_time))
                                 new_id = c.fetchone()[0]
-                                # Emit the new notice event to clients in this department
+                                # Emit new notice to clients in this department
                                 notice_data = {
                                     'id': new_id,
                                     'department': dept,
@@ -219,7 +222,7 @@ def admin(dept):
                     conn.close()
                     flash('File uploaded successfully.')
 
-                    # For immediate notices (scheduled_time is None), emit new_notice event
+                    # Emit new immediate notice event to public clients
                     notice_data = {
                         'id': new_id,
                         'department': dept,
@@ -381,7 +384,6 @@ def delete_notice(notice_id):
                 c.execute("DELETE FROM notices WHERE id=%s", (notice_id,))
                 conn.commit()
                 flash('Notice deleted successfully.')
-                # (Optionally, you could also emit a delete event to update public displays)
             else:
                 flash('Unauthorized action.')
         else:
@@ -414,7 +416,6 @@ def public_dept(dept):
         """, (dept,))
         notices = c.fetchall()
         conn.close()
-        # Here we use the slideshow view (which will also initialize the SocketIO client)
         return render_template('slideshow.html', department=dept, notices=notices, hide_nav=True)
     else:
         flash('Department not found.')
