@@ -2,3 +2,5 @@ Flask
 gunicorn
 psycopg2
 pdf2image
+Flask-SocketIO
+eventlet

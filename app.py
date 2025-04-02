@@ -4,6 +4,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from werkzeug.utils import secure_filename
 from pdf2image import convert_from_path
 from datetime import datetime, timezone, timedelta
+from flask_socketio import SocketIO, emit, join_room
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'your_fallback_secret_key')
@@ -17,6 +18,9 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mp3', 'pdf', 'docx', 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+# Initialize SocketIO (using eventlet as the async_mode)
+socketio = SocketIO(app, async_mode='eventlet')
+
 def get_db_connection():
     DATABASE_URL = os.getenv('DATABASE_URL')
     if not DATABASE_URL:
@@ -26,7 +30,6 @@ def get_db_connection():
 def init_db():
     conn = get_db_connection()
     c = conn.cursor()
-    # Create users table if not exists
     c.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
@@ -34,7 +37,6 @@ def init_db():
             password TEXT NOT NULL
         )
     ''')
-    # Create notices table if not exists (including expire_time column)
     c.execute('''
         CREATE TABLE IF NOT EXISTS notices (
             id SERIAL PRIMARY KEY,
@@ -45,7 +47,6 @@ def init_db():
             expire_time TIMESTAMP
         )
     ''')
-    # Ensure expire_time column exists with default value (30 days from NOW)
     c.execute("ALTER TABLE notices ADD COLUMN IF NOT EXISTS expire_time TIMESTAMP NOT NULL DEFAULT (NOW() + INTERVAL '30 days')")
     conn.commit()
     conn.close()
@@ -55,6 +56,42 @@ init_db()
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def broadcast_notices(dept):
+    """Fetch current notices for department and broadcast to clients."""
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute("""
+        SELECT id, department, filename, filetype, scheduled_time, expire_time
+        FROM notices
+        WHERE department=%s
+        AND (scheduled_time IS NULL OR scheduled_time <= NOW())
+        AND expire_time > NOW()
+        ORDER BY id DESC
+    """, (dept,))
+    notices = c.fetchall()
+    conn.close()
+    results = []
+    for n in notices:
+        results.append({
+            'id': n[0],
+            'department': n[1],
+            'filename': n[2],
+            'filetype': n[3],
+            'scheduled_time': n[4].strftime("%Y-%m-%d %H:%M:%S") if n[4] else None,
+            'expire_time': n[5].strftime("%Y-%m-%d %H:%M:%S") if n[5] else None
+        })
+    # Emit updated notice list to clients in the department room
+    socketio.emit('update_notices', results, room=dept)
+
+# -------------------- SOCKET.IO HANDLERS --------------------
+@socketio.on('join')
+def on_join(data):
+    dept = data.get('dept')
+    if dept:
+        join_room(dept)
+        print(f"Client joined room: {dept}")
+
+# -------------------- ROUTES --------------------
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -133,10 +170,6 @@ def department(dept):
             return redirect(url_for('department', dept=dept))
     return render_template('department.html', department=dept)
 
-############################################
-# ADMIN ROUTE: Now shows ALL notices,
-# ignoring expire_time for the admin panel
-############################################
 @app.route('/admin/<dept>', methods=['GET', 'POST'])
 def admin(dept):
     if 'dept' in session and session['dept'] == dept:
@@ -169,7 +202,7 @@ def admin(dept):
                     conn = get_db_connection()
                     c = conn.cursor()
 
-                    # If it's a PDF, convert to images
+                    # PDF conversion handling
                     if file_extension == 'pdf':
                         try:
                             pages = convert_from_path(file_path, dpi=200)
@@ -190,9 +223,10 @@ def admin(dept):
                         finally:
                             conn.close()
                         os.remove(file_path)
+                        broadcast_notices(dept)
                         return redirect(url_for('admin', dept=dept))
 
-                    # Otherwise, just save the file as is
+                    # For non-PDF files
                     c.execute("""
                         INSERT INTO notices (department, filename, filetype, scheduled_time, expire_time)
                         VALUES (%s, %s, %s, %s, %s)
@@ -200,9 +234,9 @@ def admin(dept):
                     conn.commit()
                     conn.close()
                     flash('File uploaded successfully.')
+                    broadcast_notices(dept)
                     return redirect(url_for('admin', dept=dept))
 
-            # Show ALL immediate notices (no expire_time check)
             conn = get_db_connection()
             c = conn.cursor()
             c.execute("""
@@ -212,8 +246,6 @@ def admin(dept):
                 ORDER BY id DESC
             """, (dept,))
             immediate_notices = c.fetchall()
-
-            # Show ALL prescheduled notices (no expire_time check)
             c.execute("""
                 SELECT * FROM notices
                 WHERE department=%s
@@ -221,7 +253,6 @@ def admin(dept):
                 ORDER BY id DESC
             """, (dept,))
             prescheduled_notices = c.fetchall()
-
             conn.close()
             return render_template('admin.html',
                                    department=dept,
@@ -250,6 +281,7 @@ def delete_all_notices(dept):
         conn.commit()
         conn.close()
         flash("All notices deleted successfully.")
+        broadcast_notices(dept)
         return redirect(url_for('admin', dept=dept))
     else:
         flash("Unauthorized access.")
@@ -280,9 +312,7 @@ def schedule_notice(dept):
                     flash('Invalid date/time format. Please use the correct format (e.g., 02:30 PM).')
                     return redirect(request.url)
 
-                # Expiration date (optional)
                 expire_date_str = request.form.get('expire_date')
-                ist = timezone(timedelta(hours=5, minutes=30))
                 if expire_date_str and expire_date_str.strip() != "":
                     try:
                         expire_dt = datetime.strptime(expire_date_str, "%Y-%m-%d")
@@ -321,6 +351,7 @@ def schedule_notice(dept):
                     finally:
                         conn.close()
                     os.remove(file_path)
+                    broadcast_notices(dept)
                     return redirect(url_for('admin', dept=dept))
                 else:
                     c.execute("""
@@ -330,6 +361,7 @@ def schedule_notice(dept):
                     conn.commit()
                     conn.close()
                     flash('Notice scheduled successfully.')
+                    broadcast_notices(dept)
                     return redirect(url_for('admin', dept=dept))
         return render_template('schedule_notice.html', department=dept)
     else:
@@ -353,6 +385,7 @@ def delete_notice(notice_id):
                 c.execute("DELETE FROM notices WHERE id=%s", (notice_id,))
                 conn.commit()
                 flash('Notice deleted successfully.')
+                broadcast_notices(department)
             else:
                 flash('Unauthorized action.')
         else:
@@ -367,9 +400,6 @@ def delete_notice(notice_id):
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-###########################################
-# PUBLIC DISPLAY: show only valid notices
-###########################################
 @app.route('/<dept>')
 def public_dept(dept):
     dept = dept.lower()
@@ -422,4 +452,4 @@ def get_latest_notices(dept):
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT") or 5000)
-    app.run(host="0.0.0.0", port=port)
+    socketio.run(app, host="0.0.0.0", port=port)
