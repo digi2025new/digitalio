@@ -18,7 +18,7 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mp3', 'pdf', 'docx', 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Initialize SocketIO (using eventlet as the async_mode)
+# Initialize SocketIO (using eventlet as async mode)
 socketio = SocketIO(app, async_mode='eventlet')
 
 def get_db_connection():
@@ -57,7 +57,7 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def broadcast_notices(dept):
-    """Fetch current notices for department and broadcast to clients."""
+    """Fetch current notices for the department and broadcast to all connected clients."""
     conn = get_db_connection()
     c = conn.cursor()
     c.execute("""
@@ -80,7 +80,6 @@ def broadcast_notices(dept):
             'scheduled_time': n[4].strftime("%Y-%m-%d %H:%M:%S") if n[4] else None,
             'expire_time': n[5].strftime("%Y-%m-%d %H:%M:%S") if n[5] else None
         })
-    # Emit updated notice list to clients in the department room
     socketio.emit('update_notices', results, room=dept)
 
 # -------------------- SOCKET.IO HANDLERS --------------------
@@ -185,7 +184,6 @@ def admin(dept):
                     file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                     file.save(file_path)
 
-                    # Optional expiration date
                     expire_date_str = request.form.get('expire_date')
                     ist = timezone(timedelta(hours=5, minutes=30))
                     if expire_date_str and expire_date_str.strip() != "":
@@ -202,7 +200,7 @@ def admin(dept):
                     conn = get_db_connection()
                     c = conn.cursor()
 
-                    # PDF conversion handling
+                    # If file is PDF, convert it into images
                     if file_extension == 'pdf':
                         try:
                             pages = convert_from_path(file_path, dpi=200)
@@ -226,7 +224,7 @@ def admin(dept):
                         broadcast_notices(dept)
                         return redirect(url_for('admin', dept=dept))
 
-                    # For non-PDF files
+                    # Otherwise, insert the file as a normal notice
                     c.execute("""
                         INSERT INTO notices (department, filename, filetype, scheduled_time, expire_time)
                         VALUES (%s, %s, %s, %s, %s)
