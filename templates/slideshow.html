@@ -8,13 +8,13 @@
       <div id="slide-{{ notice[0] }}" class="slide" style="display: none;">
         {% set file_url = url_for('uploaded_file', filename=notice[2]) %}
         {% if notice[3] in ['png', 'jpg', 'jpeg', 'gif', 'pdf_image'] %}
-          <img src="{{ file_url }}?t={{ loop.index0 }}" alt="Notice Image" style="width: 100%; max-height: 90vh; object-fit: contain;">
+          <img src="{{ file_url }}" alt="Notice Image" style="width: 100%; max-height: 90vh; object-fit: contain;">
         {% elif notice[3] == 'mp4' %}
-          <video src="{{ file_url }}?t={{ loop.index0 }}" autoplay muted playsinline controls style="width: 100%; max-height: 90vh; object-fit: contain;"></video>
+          <video src="{{ file_url }}" autoplay muted playsinline controls style="width: 100%; max-height: 90vh; object-fit: contain;"></video>
         {% elif notice[3] == 'mp3' %}
-          <audio src="{{ file_url }}?t={{ loop.index0 }}" autoplay controls style="width: 100%;"></audio>
+          <audio src="{{ file_url }}" autoplay controls style="width: 100%;"></audio>
         {% else %}
-          <a href="{{ file_url }}?t={{ loop.index0 }}" target="_blank" download>View Document</a>
+          <a href="{{ file_url }}" target="_blank" download>View Document</a>
         {% endif %}
       </div>
     {% endfor %}
@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function showSlide(index) {
     clearTimeout(slideInterval);
     slides.forEach(slide => slide.style.display = 'none');
-    if(slides[index]) {
+    if (slides[index]) {
       slides[index].style.display = 'block';
       let video = slides[index].querySelector('video');
       if (video) {
@@ -52,45 +52,17 @@ document.addEventListener('DOMContentLoaded', function() {
     showSlide(currentIndex);
   }
 
-  // Function to fetch the latest notices and update the slideshow.
-  function fetchLatestNotices() {
-    fetch("{{ url_for('get_latest_notices', dept=department) }}")
-      .then(response => response.json())
-      .then(data => {
-        // Clear current slides and rebuild from the latest data.
-        let slideshow = document.getElementById('slideshow');
-        slideshow.innerHTML = "";
-        data.forEach(notice => {
-          // For prescheduled notices, schedule for display when time is reached.
-          if(notice.scheduled_time) {
-            let scheduledTime = new Date(notice.scheduled_time + " UTC");
-            let delay = scheduledTime.getTime() - Date.now();
-            if(delay > 0) {
-              setTimeout(function() {
-                let slide = createSlide(notice);
-                slideshow.insertBefore(slide, slideshow.firstChild);
-                slides = document.querySelectorAll('.slideshow .slide');
-              }, delay);
-              return; // Skip immediate insertion.
-            }
-          }
-          let slide = createSlide(notice);
-          slideshow.insertBefore(slide, slideshow.firstChild);
-        });
-        slides = document.querySelectorAll('.slideshow .slide');
-        startSlideshow();
-      })
-      .catch(error => console.error("Error fetching notices:", error));
-  }
+  startSlideshow();
 
-  // Helper function to create a slide.
+  var socket = io();
+  socket.emit('join', '{{ department }}');
+
   function createSlide(notice) {
     let slide = document.createElement('div');
     slide.id = "slide-" + notice.id;
     slide.className = 'slide';
     slide.style.display = 'none';
-    // Append a timestamp query parameter to bypass caching.
-    let fileUrl = "/uploads/" + notice.filename + "?t=" + new Date().getTime();
+    let fileUrl = "/uploads/" + notice.filename;
     let html = "";
     if (['png', 'jpg', 'jpeg', 'gif', 'pdf_image'].includes(notice.filetype)) {
       html = `<img src="${fileUrl}" alt="Notice Image" style="width: 100%; max-height: 90vh; object-fit: contain;">`;
@@ -105,56 +77,29 @@ document.addEventListener('DOMContentLoaded', function() {
     return slide;
   }
 
-  // Establish socket connection and join room.
-  var socket = io();
-  socket.emit('join', '{{ department }}');
-
-  // On connect, immediately fetch the latest notices.
-  socket.on('connect', function() {
-    fetchLatestNotices();
-  });
-
-  // Listen for new immediate notices.
   socket.on('new_notice', function(data) {
+    console.log("New notice received:", data);
+    // Prevent duplicate insertion
+    if(document.getElementById("slide-" + data.id)) return;
     let slide = createSlide(data);
     let slideshow = document.getElementById('slideshow');
     slideshow.insertBefore(slide, slideshow.firstChild);
+    // Update the slides NodeList and restart slideshow if necessary
     slides = document.querySelectorAll('.slideshow .slide');
-  });
-
-  // Listen for new prescheduled notices.
-  socket.on('new_prescheduled_notice', function(data) {
-    let scheduledTime = new Date(data.scheduled_time + " UTC");
-    let delay = scheduledTime.getTime() - Date.now();
-    if(delay > 0) {
-      setTimeout(function() {
-         let slide = createSlide(data);
-         let slideshow = document.getElementById('slideshow');
-         slideshow.insertBefore(slide, slideshow.firstChild);
-         slides = document.querySelectorAll('.slideshow .slide');
-      }, delay);
-    } else {
-      let slide = createSlide(data);
-      let slideshow = document.getElementById('slideshow');
-      slideshow.insertBefore(slide, slideshow.firstChild);
-      slides = document.querySelectorAll('.slideshow .slide');
-    }
-  });
-
-  // Listen for removal events.
-  socket.on('remove_prescheduled_notice', function(data) {
-    let elem = document.getElementById("slide-" + data.id);
-    if(elem) {
-      elem.parentElement.removeChild(elem);
-      slides = document.querySelectorAll('.slideshow .slide');
-    }
+    // Optionally, restart the slideshow to include the new slide.
+    startSlideshow();
   });
 
   socket.on('delete_notice', function(data) {
     let elem = document.getElementById("slide-" + data.id);
     if(elem) {
-      elem.parentElement.removeChild(elem);
+      elem.parentNode.removeChild(elem);
       slides = document.querySelectorAll('.slideshow .slide');
+      // Restart slideshow if the current index is out of bounds.
+      if(currentIndex >= slides.length) {
+        currentIndex = 0;
+      }
+      showSlide(currentIndex);
     }
   });
 });
