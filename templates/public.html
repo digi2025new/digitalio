@@ -22,7 +22,8 @@
 </div>
 
 <script>
-  // Initialize Socket.IO and join the department room.
+document.addEventListener("DOMContentLoaded", function() {
+  // Initialize Socket.IO and join the appropriate department room.
   var socket = io();
   socket.emit('join', '{{ department }}');
 
@@ -36,19 +37,19 @@
     if (['png', 'jpg', 'jpeg', 'gif', 'pdf_image'].includes(notice.filetype)) {
       div.innerHTML = '<img src="'+fileUrl+'" alt="Notice Image" style="width: 100%; height: auto; max-height: 90vh; object-fit: contain; display: block; margin: 0 auto;">';
     } else if (notice.filetype === 'mp4') {
-      div.innerHTML = '<video src="'+fileUrl+'" controls style="width: 100%; height: auto; max-height: 90vh; object-fit: contain; display: block; margin: 0 auto;"></video>';
+      div.innerHTML = '<video src="'+fileUrl+'" controls autoplay muted style="width: 100%; height: auto; max-height: 90vh; object-fit: contain; display: block; margin: 0 auto;"></video>';
     } else if (notice.filetype === 'mp3') {
-      div.innerHTML = '<audio src="'+fileUrl+'" controls style="width: 100%; height: auto; display: block; margin: 0 auto;"></audio>';
+      div.innerHTML = '<audio src="'+fileUrl+'" controls autoplay style="width: 100%; height: auto; display: block; margin: 0 auto;"></audio>';
     } else {
       div.innerHTML = '<a href="'+fileUrl+'" target="_blank" style="display: inline-block;">View Document</a>';
     }
     return div;
   }
 
-  // Listen for new immediate notices.
+  // Listen for new immediate notice events.
   socket.on('new_notice', function(data) {
     // Prevent duplicate insertion.
-    if(document.getElementById('notice-' + data.id)) return;
+    if (document.getElementById('notice-' + data.id)) return;
     var container = document.getElementById('notices-container');
     var noticeElement = createNotice(data);
     container.insertBefore(noticeElement, container.firstChild);
@@ -57,9 +58,10 @@
   // Listen for deletion events.
   socket.on('delete_notice', function(data) {
     var elem = document.getElementById('notice-' + data.id);
-    if(elem) {
-      elem.parentElement.removeChild(elem);
+    if (elem) {
+      elem.parentNode.removeChild(elem);
     }
   });
+});
 </script>
 {% endblock %}
