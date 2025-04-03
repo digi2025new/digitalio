@@ -23,7 +23,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // Slideshow variables and functions
   let slides = document.querySelectorAll('.slideshow .slide');
   let currentIndex = 0;
   let slideInterval;
@@ -31,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function showSlide(index) {
     clearTimeout(slideInterval);
     slides.forEach(slide => slide.style.display = 'none');
-    if(slides[index]) {
+    if (slides[index]) {
       slides[index].style.display = 'block';
       let video = slides[index].querySelector('video');
       if (video) {
@@ -59,7 +58,6 @@ document.addEventListener('DOMContentLoaded', function() {
   var socket = io();
   socket.emit('join', '{{ department }}');
 
-  // Helper function to create a new slide element.
   function createSlide(notice) {
     let slide = document.createElement('div');
     slide.id = "slide-" + notice.id;
@@ -80,13 +78,13 @@ document.addEventListener('DOMContentLoaded', function() {
     return slide;
   }
 
-  // Listen for new notice events (immediate or scheduled becoming active).
+  // Listen for new notice events (for both immediate and scheduled notices becoming active).
   socket.on('new_notice', function(data) {
-    if(document.getElementById("slide-" + data.id)) return; // Avoid duplicates
+    if(document.getElementById("slide-" + data.id)) return; // Prevent duplicate slides
     let slide = createSlide(data);
     let slideshow = document.getElementById('slideshow');
     slideshow.insertBefore(slide, slideshow.firstChild);
-    // Update our slides NodeList and restart the slideshow
+    // Update our slides NodeList and restart the slideshow.
     slides = document.querySelectorAll('.slideshow .slide');
     startSlideshow();
   });
