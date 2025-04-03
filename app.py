@@ -1,5 +1,7 @@
 import eventlet
 eventlet.monkey_patch()
+import eventlet.debug
+eventlet.debug.hub_prevent_multiple_readers(False)
 
 import os
 import psycopg2
