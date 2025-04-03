@@ -23,6 +23,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  // Slideshow variables and functions
   let slides = document.querySelectorAll('.slideshow .slide');
   let currentIndex = 0;
   let slideInterval;
@@ -54,9 +55,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
   startSlideshow();
 
+  // Initialize Socket.IO and join the department room.
   var socket = io();
   socket.emit('join', '{{ department }}');
 
+  // Helper function to create a new slide element.
   function createSlide(notice) {
     let slide = document.createElement('div');
     slide.id = "slide-" + notice.id;
@@ -77,45 +80,18 @@ document.addEventListener('DOMContentLoaded', function() {
     return slide;
   }
 
-  // Immediate notices: add directly
+  // Listen for new notice events (immediate or scheduled becoming active).
   socket.on('new_notice', function(data) {
-    if(document.getElementById("slide-" + data.id)) return;
+    if(document.getElementById("slide-" + data.id)) return; // Avoid duplicates
     let slide = createSlide(data);
     let slideshow = document.getElementById('slideshow');
     slideshow.insertBefore(slide, slideshow.firstChild);
+    // Update our slides NodeList and restart the slideshow
     slides = document.querySelectorAll('.slideshow .slide');
     startSlideshow();
   });
 
-  // Prescheduled notices: add when scheduled time is reached.
-  socket.on('new_prescheduled_notice', function(data) {
-    // data.scheduled_time is a string in "YYYY-MM-DD HH:MM:SS" format (UTC)
-    let scheduledTime = new Date(data.scheduled_time + " UTC");
-    let delay = scheduledTime.getTime() - Date.now();
-    if(delay > 0) {
-      setTimeout(function() {
-         // Insert slide at scheduled time
-         if(!document.getElementById("slide-" + data.id)) {
-           let slide = createSlide(data);
-           let slideshow = document.getElementById('slideshow');
-           slideshow.insertBefore(slide, slideshow.firstChild);
-           slides = document.querySelectorAll('.slideshow .slide');
-           startSlideshow();
-         }
-      }, delay);
-    } else {
-      // If scheduled time already passed, add immediately.
-      if(!document.getElementById("slide-" + data.id)) {
-         let slide = createSlide(data);
-         let slideshow = document.getElementById('slideshow');
-         slideshow.insertBefore(slide, slideshow.firstChild);
-         slides = document.querySelectorAll('.slideshow .slide');
-         startSlideshow();
-      }
-    }
-  });
-
-  // When a notice is deleted or expired
+  // Listen for delete notice events.
   socket.on('delete_notice', function(data) {
     let elem = document.getElementById("slide-" + data.id);
     if(elem) {
