@@ -1,12 +1,11 @@
 {% extends "base.html" %}
 {% set hide_nav = true %}
-{% set show_home = false %}
 {% block content %}
 <div class="public-page" style="padding: 10px;">
   <h2 style="text-align: center;">{{ department | upper }} Notices</h2>
   <div id="notices-container" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
     {% for notice in notices %}
-      <div class="notice" style="flex: 1 1 auto; max-width: 100%; box-sizing: border-box; margin: 10px;">
+      <div class="notice" id="notice-{{ notice[0] }}" style="flex: 1 1 auto; max-width: 100%; box-sizing: border-box; margin: 10px;">
         {% set file_url = url_for('uploaded_file', filename=notice[2]) %}
         {% if notice[3] in ['png', 'jpg', 'jpeg', 'gif', 'pdf_image'] %}
           <img src="{{ file_url }}" alt="Notice Image" style="width: 100%; height: auto; max-height: 90vh; object-fit: contain; display: block; margin: 0 auto;">
@@ -23,34 +22,44 @@
 </div>
 
 <script>
-function fetchLatestNotices() {
-  fetch("{{ url_for('get_latest_notices', dept=department) }}")
-    .then(response => response.json())
-    .then(data => {
-      const container = document.getElementById('notices-container');
-      container.innerHTML = "";
-      data.forEach(notice => {
-        let noticeDiv = document.createElement('div');
-        noticeDiv.style.flex = "1 1 auto";
-        noticeDiv.style.maxWidth = "100%";
-        noticeDiv.style.boxSizing = "border-box";
-        noticeDiv.style.margin = "10px";
-        let fileUrl = "{{ url_for('uploaded_file', filename='') }}" + notice.filename;
-        if (['png', 'jpg', 'jpeg', 'gif', 'pdf_image'].includes(notice.filetype)) {
-          noticeDiv.innerHTML = `<img src="${fileUrl}" alt="Notice Image" style="width: 100%; height: auto; max-height: 90vh; object-fit: contain; display: block; margin: 0 auto;">`;
-        } else if (notice.filetype === 'mp4') {
-          noticeDiv.innerHTML = `<video src="${fileUrl}" controls style="width: 100%; height: auto; max-height: 90vh; object-fit: contain; display: block; margin: 0 auto;"></video>`;
-        } else if (notice.filetype === 'mp3') {
-          noticeDiv.innerHTML = `<audio src="${fileUrl}" controls style="width: 100%; height: auto; display: block; margin: 0 auto;"></audio>`;
-        } else {
-          noticeDiv.innerHTML = `<a href="${fileUrl}" target="_blank" style="display: inline-block;">View Document</a>`;
-        }
-        container.appendChild(noticeDiv);
-      });
-    })
-    .catch(error => console.error("Error fetching notices:", error));
-}
+  // Initialize Socket.IO and join the department room.
+  var socket = io();
+  socket.emit('join', '{{ department }}');
 
-setInterval(fetchLatestNotices, 5000);
+  // Helper function to create a new notice element.
+  function createNotice(notice) {
+    var div = document.createElement('div');
+    div.className = 'notice';
+    div.id = 'notice-' + notice.id;
+    div.style.cssText = "flex: 1 1 auto; max-width: 100%; box-sizing: border-box; margin: 10px;";
+    var fileUrl = "/uploads/" + notice.filename;
+    if (['png', 'jpg', 'jpeg', 'gif', 'pdf_image'].includes(notice.filetype)) {
+      div.innerHTML = '<img src="'+fileUrl+'" alt="Notice Image" style="width: 100%; height: auto; max-height: 90vh; object-fit: contain; display: block; margin: 0 auto;">';
+    } else if (notice.filetype === 'mp4') {
+      div.innerHTML = '<video src="'+fileUrl+'" controls style="width: 100%; height: auto; max-height: 90vh; object-fit: contain; display: block; margin: 0 auto;"></video>';
+    } else if (notice.filetype === 'mp3') {
+      div.innerHTML = '<audio src="'+fileUrl+'" controls style="width: 100%; height: auto; display: block; margin: 0 auto;"></audio>';
+    } else {
+      div.innerHTML = '<a href="'+fileUrl+'" target="_blank" style="display: inline-block;">View Document</a>';
+    }
+    return div;
+  }
+
+  // Listen for new immediate notices.
+  socket.on('new_notice', function(data) {
+    // Prevent duplicate insertion.
+    if(document.getElementById('notice-' + data.id)) return;
+    var container = document.getElementById('notices-container');
+    var noticeElement = createNotice(data);
+    container.insertBefore(noticeElement, container.firstChild);
+  });
+
+  // Listen for deletion events.
+  socket.on('delete_notice', function(data) {
+    var elem = document.getElementById('notice-' + data.id);
+    if(elem) {
+      elem.parentElement.removeChild(elem);
+    }
+  });
 </script>
 {% endblock %}
