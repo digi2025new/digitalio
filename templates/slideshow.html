@@ -58,6 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
   var socket = io();
   socket.emit('join', '{{ department }}');
 
+  // Helper to create a slide element.
   function createSlide(notice) {
     let slide = document.createElement('div');
     slide.id = "slide-" + notice.id;
@@ -78,24 +79,50 @@ document.addEventListener('DOMContentLoaded', function() {
     return slide;
   }
 
-  // Listen for new notice events (for both immediate and scheduled notices becoming active).
+  // Immediate notices are added as soon as they're received.
   socket.on('new_notice', function(data) {
-    if(document.getElementById("slide-" + data.id)) return; // Prevent duplicate slides
+    if(document.getElementById("slide-" + data.id)) return;
     let slide = createSlide(data);
     let slideshow = document.getElementById('slideshow');
     slideshow.insertBefore(slide, slideshow.firstChild);
-    // Update our slides NodeList and restart the slideshow.
     slides = document.querySelectorAll('.slideshow .slide');
     startSlideshow();
   });
 
-  // Listen for delete notice events.
+  // Prescheduled notices: schedule insertion based on the scheduled time.
+  socket.on('new_prescheduled_notice', function(data) {
+    // Assume data.scheduled_time is in "YYYY-MM-DD HH:MM:SS" format (UTC)
+    let scheduledTime = new Date(data.scheduled_time + " UTC");
+    let delay = scheduledTime.getTime() - Date.now();
+    if (delay > 0) {
+      setTimeout(function() {
+        if (!document.getElementById("slide-" + data.id)) {
+          let slide = createSlide(data);
+          let slideshow = document.getElementById('slideshow');
+          slideshow.insertBefore(slide, slideshow.firstChild);
+          slides = document.querySelectorAll('.slideshow .slide');
+          startSlideshow();
+        }
+      }, delay);
+    } else {
+      // If scheduled time is already passed, add immediately.
+      if (!document.getElementById("slide-" + data.id)) {
+        let slide = createSlide(data);
+        let slideshow = document.getElementById('slideshow');
+        slideshow.insertBefore(slide, slideshow.firstChild);
+        slides = document.querySelectorAll('.slideshow .slide');
+        startSlideshow();
+      }
+    }
+  });
+
+  // Delete events remove the slide immediately.
   socket.on('delete_notice', function(data) {
     let elem = document.getElementById("slide-" + data.id);
-    if(elem) {
+    if (elem) {
       elem.parentNode.removeChild(elem);
       slides = document.querySelectorAll('.slideshow .slide');
-      if(currentIndex >= slides.length) {
+      if (currentIndex >= slides.length) {
         currentIndex = 0;
       }
       showSlide(currentIndex);
