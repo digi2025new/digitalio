@@ -8,13 +8,13 @@
       <div id="slide-{{ notice[0] }}" class="slide" style="display: none;">
         {% set file_url = url_for('uploaded_file', filename=notice[2]) %}
         {% if notice[3] in ['png', 'jpg', 'jpeg', 'gif', 'pdf_image'] %}
-          <img src="{{ file_url }}" alt="Notice Image" style="width: 100%; max-height: 90vh; object-fit: contain;">
+          <img src="{{ file_url }}?t={{ loop.index0 }}" alt="Notice Image" style="width: 100%; max-height: 90vh; object-fit: contain;">
         {% elif notice[3] == 'mp4' %}
-          <video src="{{ file_url }}" autoplay muted playsinline controls style="width: 100%; max-height: 90vh; object-fit: contain;"></video>
+          <video src="{{ file_url }}?t={{ loop.index0 }}" autoplay muted playsinline controls style="width: 100%; max-height: 90vh; object-fit: contain;"></video>
         {% elif notice[3] == 'mp3' %}
-          <audio src="{{ file_url }}" autoplay controls style="width: 100%;"></audio>
+          <audio src="{{ file_url }}?t={{ loop.index0 }}" autoplay controls style="width: 100%;"></audio>
         {% else %}
-          <a href="{{ file_url }}" target="_blank" download>View Document</a>
+          <a href="{{ file_url }}?t={{ loop.index0 }}" target="_blank" download>View Document</a>
         {% endif %}
       </div>
     {% endfor %}
@@ -62,7 +62,8 @@ document.addEventListener('DOMContentLoaded', function() {
     slide.id = "slide-" + notice.id;
     slide.className = 'slide';
     slide.style.display = 'none';
-    let fileUrl = "/uploads/" + notice.filename;
+    // Append a timestamp query parameter to force refresh
+    let fileUrl = "/uploads/" + notice.filename + "?t=" + new Date().getTime();
     let html = "";
     if (['png', 'jpg', 'jpeg', 'gif', 'pdf_image'].includes(notice.filetype)) {
       html = `<img src="${fileUrl}" alt="Notice Image" style="width: 100%; max-height: 90vh; object-fit: contain;">`;
